@@ -3,7 +3,7 @@ export const MOCK_RESOURCES = [
   {
     id: 1,
     title: "Introduction to Programming",
-    description: "Comprehensive notes covering C programming basics, control structures, and arrays.",
+    description: "Comprehensive notes covering C programming basics, control structures, arrays, functions, pointers, and file handling. These notes provide a solid foundation for beginner programmers and include examples for each concept.",
     type: "Notes",
     subject: "Computer Programming",
     semester: 1,
@@ -13,7 +13,7 @@ export const MOCK_RESOURCES = [
   {
     id: 2,
     title: "Digital Logic Question Bank",
-    description: "Collection of past exam questions from 2018-2022 with detailed solutions.",
+    description: "Collection of past exam questions from 2018-2022 with detailed solutions. Covers Boolean algebra, logic gates, combinational circuits, sequential circuits, and digital design principles.",
     type: "Questions",
     subject: "Digital Logic",
     semester: 1,
@@ -23,7 +23,7 @@ export const MOCK_RESOURCES = [
   {
     id: 3,
     title: "Mathematics I Syllabus",
-    description: "Official syllabus for Mathematics I including course objectives and evaluation criteria.",
+    description: "Official syllabus for Mathematics I including course objectives, evaluation criteria, recommended textbooks, and weekly schedule. Essential for first semester students planning their study schedule.",
     type: "Syllabus",
     subject: "Mathematics I",
     semester: 1,
@@ -33,7 +33,7 @@ export const MOCK_RESOURCES = [
   {
     id: 4,
     title: "Data Structures Notes",
-    description: "Complete notes on arrays, linked lists, stacks, queues, trees, and graphs.",
+    description: "Complete notes on arrays, linked lists, stacks, queues, trees, graphs, and advanced data structures. Includes time and space complexity analysis and implementation examples in C++.",
     type: "Notes",
     subject: "Data Structures and Algorithms",
     semester: 3,
@@ -43,7 +43,7 @@ export const MOCK_RESOURCES = [
   {
     id: 5,
     title: "Database Management Systems",
-    description: "Lecture notes covering relational model, SQL, normalization, and transactions.",
+    description: "Lecture notes covering relational model, SQL, normalization, transactions, concurrency control, and database design. Includes practical examples using MySQL and database design exercises.",
     type: "Notes",
     subject: "Database Management Systems",
     semester: 4,
@@ -53,13 +53,73 @@ export const MOCK_RESOURCES = [
   {
     id: 6,
     title: "Object-Oriented Programming Past Papers",
-    description: "Last 5 years question papers for OOP with Java programming examples.",
+    description: "Last 5 years question papers for OOP with Java programming examples and model answers. Great preparation material for final examinations and concept review.",
     type: "Questions",
     subject: "Object-Oriented Programming",
     semester: 3,
     uploadDate: "2023-08-05",
     fileUrl: "#",
   },
+  {
+    id: 7,
+    title: "Web Development Fundamentals",
+    description: "Comprehensive notes on HTML, CSS, JavaScript, and responsive design principles. Includes practical examples and code snippets for building modern websites.",
+    type: "Notes",
+    subject: "Web Development",
+    semester: 2,
+    uploadDate: "2023-07-12",
+    fileUrl: "#",
+  },
+  {
+    id: 8,
+    title: "Operating Systems Concepts",
+    description: "Detailed notes on process management, memory management, file systems, and virtualization. Covers theoretical concepts with practical Linux command examples.",
+    type: "Notes",
+    subject: "Operating Systems",
+    semester: 4,
+    uploadDate: "2023-06-30",
+    fileUrl: "#",
+  },
+  {
+    id: 9,
+    title: "Mobile Application Development Syllabus",
+    description: "Complete course outline for Android app development using Java/Kotlin. Includes grading criteria, project requirements, and weekly learning objectives.",
+    type: "Syllabus",
+    subject: "Mobile Application Development",
+    semester: 5,
+    uploadDate: "2023-09-01",
+    fileUrl: "#",
+  },
+  {
+    id: 10,
+    title: "Computer Networks Exam Questions",
+    description: "Compilation of previous year questions covering OSI model, TCP/IP, routing protocols, network security, and wireless networks with detailed explanations.",
+    type: "Questions",
+    subject: "Computer Networks",
+    semester: 4,
+    uploadDate: "2023-08-18",
+    fileUrl: "#",
+  },
+  {
+    id: 11,
+    title: "Artificial Intelligence Notes",
+    description: "Lecture notes on search algorithms, knowledge representation, machine learning fundamentals, natural language processing, and expert systems with Python examples.",
+    type: "Notes",
+    subject: "Artificial Intelligence",
+    semester: 5,
+    uploadDate: "2023-09-25",
+    fileUrl: "#",
+  },
+  {
+    id: 12,
+    title: "Software Engineering Methodology",
+    description: "Comprehensive guide to software development life cycle, agile methodologies, requirements engineering, software design patterns, and quality assurance.",
+    type: "Notes",
+    subject: "Software Engineering",
+    semester: 3,
+    uploadDate: "2023-07-05",
+    fileUrl: "#",
+  }
 ];
 
 export const SEMESTERS = Array.from({ length: 8 }, (_, i) => i + 1);
@@ -80,5 +140,17 @@ export const SUBJECTS = [
   "Operating Systems",
   "Computer Graphics",
 ];
+
+// Enhanced mapping of subjects by semester (for a real app, this would come from the database)
+export const SUBJECTS_BY_SEMESTER = {
+  1: ["Computer Programming", "Digital Logic", "Mathematics I"],
+  2: ["Object-Oriented Programming", "Mathematics II", "Web Development"],
+  3: ["Data Structures and Algorithms", "Database Management Systems", "Software Engineering"],
+  4: ["Computer Networks", "Operating Systems", "Computer Architecture"],
+  5: ["Artificial Intelligence", "Mobile Application Development", "Computer Graphics"],
+  6: ["Web Development", "Machine Learning", "Data Science"],
+  7: ["Cloud Computing", "Big Data Analytics", "Information Security"],
+  8: ["Project Work", "Internship", "Emerging Technologies"]
+};
 
 export const RESOURCE_TYPES = ["Notes", "Questions", "Syllabus"];

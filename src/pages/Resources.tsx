@@ -1,13 +1,35 @@
 
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ResourceCard from "@/components/ResourceCard";
 import { MOCK_RESOURCES, SEMESTERS, SUBJECTS, RESOURCE_TYPES } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
+
+// Group subjects by semester
+const getSubjectsBySemester = (semesterValue) => {
+  if (!semesterValue) return SUBJECTS;
+  
+  // In a real app, you would fetch this from an API
+  // For now, let's simulate semester-specific subjects
+  const semesterNum = parseInt(semesterValue);
+  
+  // Create a simple mapping of subjects per semester
+  const subjectMapping = {
+    1: ["Computer Programming", "Digital Logic", "Mathematics I"],
+    2: ["Object-Oriented Programming", "Mathematics II", "Web Development"],
+    3: ["Data Structures and Algorithms", "Database Management Systems", "Software Engineering"],
+    4: ["Computer Networks", "Operating Systems", "Computer Architecture"],
+    5: ["Artificial Intelligence", "Mobile Application Development", "Computer Graphics"],
+    6: ["Web Development", "Machine Learning", "Data Science"],
+    7: ["Cloud Computing", "Big Data Analytics", "Information Security"],
+    8: ["Project Work", "Internship", "Emerging Technologies"]
+  };
+  
+  return subjectMapping[semesterNum] || SUBJECTS;
+};
 
 const Resources = () => {
   const [resources, setResources] = useState(MOCK_RESOURCES);
@@ -17,7 +39,21 @@ const Resources = () => {
     type: "",
     searchQuery: "",
   });
+  const [availableSubjects, setAvailableSubjects] = useState(SUBJECTS);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Update available subjects when semester changes
+  useEffect(() => {
+    setAvailableSubjects(getSubjectsBySemester(filters.semester));
+    
+    // Reset subject filter if current subject is not available in the new semester
+    if (filters.semester && filters.subject) {
+      const newSubjects = getSubjectsBySemester(filters.semester);
+      if (!newSubjects.includes(filters.subject)) {
+        setFilters(prev => ({...prev, subject: ""}));
+      }
+    }
+  }, [filters.semester]);
 
   // Apply filters
   useEffect(() => {
@@ -140,7 +176,7 @@ const Resources = () => {
               </select>
             </div>
 
-            {/* Subject Filter */}
+            {/* Subject Filter - Now dynamically updated based on semester */}
             <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subject
@@ -151,7 +187,7 @@ const Resources = () => {
                 onChange={(e) => handleFilterChange("subject", e.target.value)}
               >
                 <option value="">All Subjects</option>
-                {SUBJECTS.map((subject) => (
+                {availableSubjects.map((subject) => (
                   <option key={subject} value={subject}>
                     {subject}
                   </option>
