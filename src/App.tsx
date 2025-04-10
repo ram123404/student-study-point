@@ -1,35 +1,39 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Resources from "./pages/Resources";
-import About from "./pages/About";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import Resources from './pages/Resources';
 
-const queryClient = new QueryClient();
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <div>
+        <nav className="bg-blue-500 text-white p-4">
+          <div className="container mx-auto flex justify-between">
+            <Link to="/" className="text-xl font-bold">StudyPoint</Link>
+            <div>
+              <Link to="/resources" className="mr-4 hover:underline">Resources</Link>
+            </div>
+          </div>
+        </nav>
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={
+            <div className="container mx-auto p-4">
+              <h1 className="text-3xl font-bold mb-4">Welcome to StudyPoint</h1>
+              <p>Your one-stop platform for academic resources</p>
+              <Link 
+                to="/resources" 
+                className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Browse Resources
+              </Link>
+            </div>
+          } />
           <Route path="/resources" element={<Resources />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </div>
+    </BrowserRouter>
+  );
+};
 
 export default App;
