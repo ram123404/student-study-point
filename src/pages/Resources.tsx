@@ -7,6 +7,15 @@ import ResourceCard from "@/components/ResourceCard";
 import { MOCK_RESOURCES, SEMESTERS, SUBJECTS, RESOURCE_TYPES } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Group subjects by semester
 const getSubjectsBySemester = (semesterValue) => {
@@ -41,6 +50,10 @@ const Resources = () => {
   });
   const [availableSubjects, setAvailableSubjects] = useState(SUBJECTS);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const resourcesPerPage = 20;
 
   // Update available subjects when semester changes
   useEffect(() => {
@@ -91,6 +104,7 @@ const Resources = () => {
     }
 
     setResources(filteredResults);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [filters]);
 
   // Handle filter changes
@@ -114,6 +128,63 @@ const Resources = () => {
   // Toggle filters on mobile
   const toggleFilters = () => {
     setShowFilters(!showFilters);
+  };
+
+  // Get current resources based on pagination
+  const indexOfLastResource = currentPage * resourcesPerPage;
+  const indexOfFirstResource = indexOfLastResource - resourcesPerPage;
+  const currentResources = resources.slice(indexOfFirstResource, indexOfLastResource);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(resources.length / resourcesPerPage);
+
+  // Generate pagination links
+  const generatePaginationLinks = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages are less than max visible pages
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show limited pages with ellipsis
+      if (currentPage <= 3) {
+        // When on early pages
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // When on later pages
+        pages.push(1);
+        pages.push("ellipsis");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // When in the middle
+        pages.push(1);
+        pages.push("ellipsis");
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    // Scroll to top when changing page
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -217,26 +288,70 @@ const Resources = () => {
         </div>
 
         {/* Results Section */}
-        <div className="mb-4">
+        <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">
             {resources.length} {resources.length === 1 ? "Resource" : "Resources"} Found
           </h2>
+          {totalPages > 0 && (
+            <p className="text-sm text-gray-500">
+              Showing {indexOfFirstResource + 1} to {Math.min(indexOfLastResource, resources.length)} of {resources.length} resources
+            </p>
+          )}
         </div>
 
         {/* Resource Cards */}
-        {resources.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resources.map((resource) => (
+        {currentResources.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            {currentResources.map((resource) => (
               <ResourceCard key={resource.id} resource={resource} />
             ))}
           </div>
         ) : (
-          <div className="p-8 text-center bg-gray-50 rounded-lg">
+          <div className="p-8 text-center bg-gray-50 rounded-lg mb-8">
             <p className="text-gray-500 mb-4">No matching resources found.</p>
             <Button onClick={clearFilters} variant="outline">
               Clear Filters
             </Button>
           </div>
+        )}
+
+        {/* Pagination */}
+        {resources.length > 0 && totalPages > 1 && (
+          <Pagination className="my-8">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+
+              {generatePaginationLinks().map((page, index) => (
+                page === "ellipsis" ? (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      isActive={page === currentPage}
+                      onClick={() => handlePageChange(page)}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         )}
       </main>
 
