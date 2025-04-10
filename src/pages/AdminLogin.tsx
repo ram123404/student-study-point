@@ -1,137 +1,123 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-// Validation schema
-const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-});
+import { AlertCircle, Lock } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 const AdminLogin = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Set up form
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-  
-  // Mock admin credentials
-  const MOCK_ADMIN = {
-    email: "admin@studypoint.com",
-    password: "password123",
-  };
-  
-  // Handle form submission
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // For demo, we'll use a simple hardcoded login
+  // In a real app, you'd connect to a backend service
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (values.email === MOCK_ADMIN.email && values.password === MOCK_ADMIN.password) {
-      // Set mock auth in localStorage
-      localStorage.setItem("adminAuth", "true");
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome to the admin dashboard",
-        variant: "default",
-      });
-      
-      navigate("/admin/dashboard");
-    } else {
-      toast({
-        title: "Login failed",
-        description: "Invalid email or password",
-        variant: "destructive",
-      });
-    }
-    
-    setIsLoading(false);
+    // Simulate API call
+    setTimeout(() => {
+      if (email === 'admin@studypoint.com' && password === 'password123') {
+        toast({
+          title: "Login successful",
+          description: "Welcome to the admin dashboard!",
+        });
+        navigate('/admin/dashboard');
+      } else {
+        setError('Invalid email or password');
+      }
+      setIsLoading(false);
+    }, 1000);
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
-      <main className="flex-grow flex items-center justify-center py-12">
-        <div className="w-full max-w-md px-4">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center mb-6">
-              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Lock className="h-6 w-6 text-primary" />
-              </div>
-              <h1 className="text-2xl font-bold">Admin Login</h1>
-              <p className="text-gray-600 mt-2">Sign in to access the dashboard</p>
-            </div>
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="admin@studypoint.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
-                </Button>
-              </form>
-            </Form>
-            
-            <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
-              <p>For demo: admin@studypoint.com / password123</p>
-            </div>
+
+      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-bold text-gray-900">
+              Admin Login
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Sign in to manage resources
+            </p>
           </div>
+
+          {error && (
+            <div className="bg-red-50 p-4 rounded-md flex items-start space-x-2 text-sm text-red-600 border border-red-200">
+              <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+            <div className="rounded-md shadow-sm space-y-4">
+              <div>
+                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email address
+                </label>
+                <Input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@studypoint.com"
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Button
+                type="submit"
+                className="w-full flex justify-center"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in..." : "Sign in"}
+                {!isLoading && <Lock className="ml-2 h-4 w-4" />}
+              </Button>
+            </div>
+
+            <div className="text-center text-sm">
+              <p className="text-gray-500">
+                Demo Credentials:
+              </p>
+              <p className="text-gray-700">
+                Email: admin@studypoint.com<br />
+                Password: password123
+              </p>
+            </div>
+          </form>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
