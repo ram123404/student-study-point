@@ -30,8 +30,9 @@ export const getResources = async (): Promise<Resource[]> => {
   try {
     ensureResourcesLoaded();
     // For now, we'll return the local storage data
-    // In a real implementation, this would fetch data from MongoDB
-    return JSON.parse(localStorage.getItem('resources') || '[]');
+    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+    console.log('Fetched resources:', resources);
+    return resources;
   } catch (error) {
     console.error('Failed to fetch resources:', error);
     return [];
@@ -42,7 +43,9 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
   try {
     ensureResourcesLoaded();
     const resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    return resources.find((r: Resource) => r.id === id) || null;
+    const resource = resources.find((r: Resource) => r.id === id) || null;
+    console.log(`Fetched resource with id ${id}:`, resource);
+    return resource;
   } catch (error) {
     console.error(`Failed to fetch resource with id ${id}:`, error);
     return null;
@@ -53,6 +56,7 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
   try {
     ensureResourcesLoaded();
     const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+    
     const newResource = {
       ...resource,
       id: Date.now(),
@@ -61,6 +65,7 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
     
     resources.push(newResource);
     localStorage.setItem('resources', JSON.stringify(resources));
+    console.log('Created resource:', newResource);
     
     return newResource;
   } catch (error) {
@@ -79,10 +84,12 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
       return null;
     }
     
-    resources[index] = { ...resources[index], ...updates };
+    const updatedResource = { ...resources[index], ...updates };
+    resources[index] = updatedResource;
     localStorage.setItem('resources', JSON.stringify(resources));
+    console.log(`Updated resource with id ${id}:`, updatedResource);
     
-    return resources[index];
+    return updatedResource;
   } catch (error) {
     console.error(`Failed to update resource with id ${id}:`, error);
     throw error;
@@ -96,6 +103,7 @@ export const deleteResource = async (id: number): Promise<boolean> => {
     const filteredResources = resources.filter((r: Resource) => r.id !== id);
     
     localStorage.setItem('resources', JSON.stringify(filteredResources));
+    console.log(`Deleted resource with id ${id}`);
     
     return true;
   } catch (error) {

@@ -19,7 +19,9 @@ const ResourceDetail = () => {
     const fetchResource = async () => {
       try {
         if (id) {
+          console.log('Fetching resource with id:', id);
           const foundResource = await getResourceById(Number(id));
+          console.log('Found resource:', foundResource);
           setResource(foundResource);
         }
       } catch (error) {

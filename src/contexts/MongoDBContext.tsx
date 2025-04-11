@@ -34,6 +34,9 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
         if (!localStorage.getItem('resources')) {
           console.log('Initializing local storage with mock data');
           localStorage.setItem('resources', JSON.stringify(MOCK_RESOURCES));
+        } else {
+          console.log('Local storage already initialized');
+          console.log('Current resources:', JSON.parse(localStorage.getItem('resources') || '[]'));
         }
         
         // Simulate MongoDB connection
