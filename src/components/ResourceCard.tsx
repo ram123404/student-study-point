@@ -2,17 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { FileText, Download, BookOpen, BookMarked, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
-
-interface Resource {
-  id: number;
-  title: string;
-  description: string;
-  type: string;
-  subject: string;
-  semester: number;
-  uploadDate: string;
-  fileUrl: string;
-}
+import { Resource } from "@/types/resource";
 
 interface ResourceCardProps {
   resource: Resource;
@@ -51,24 +41,24 @@ const ResourceCard = ({ resource }: ResourceCardProps) => {
     <div className="bg-white rounded-lg shadow-md overflow-hidden resource-card transition-all hover:shadow-lg hover:translate-y-[-2px] h-full">
       <Link to={`/resources/${resource.id}`} className="block h-full">
         <div className="p-6 h-full flex flex-col">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-start space-x-3">
-              <div className={`p-2.5 rounded-md ${getColor()}`}>
+          <div className="flex items-start justify-between mb-5">
+            <div className="flex items-start space-x-3.5">
+              <div className={`p-3 rounded-md ${getColor()}`}>
                 {getIcon()}
               </div>
               <div>
                 <h3 className="font-semibold text-lg line-clamp-1">{resource.title}</h3>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-gray-500 text-sm mt-1.5">
                   {resource.subject} • Semester {resource.semester}
                 </p>
               </div>
             </div>
-            <span className={`text-xs font-medium py-1.5 px-2.5 rounded-full ${getColor()} ml-2 whitespace-nowrap`}>
+            <span className={`text-xs font-medium py-1.5 px-3 rounded-full ${getColor()} ml-2 whitespace-nowrap`}>
               {resource.type}
             </span>
           </div>
           
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
+          <p className="text-gray-600 text-sm mb-5 line-clamp-2 flex-grow">
             {resource.description}
           </p>
           
@@ -77,16 +67,16 @@ const ResourceCard = ({ resource }: ResourceCardProps) => {
               Added on {new Date(resource.uploadDate).toLocaleDateString()}
             </span>
             
-            <div className="flex space-x-2">
-              <Button size="sm" variant="outline" className="flex items-center text-xs px-2.5 py-1 h-8" asChild>
+            <div className="flex space-x-2.5">
+              <Button size="sm" variant="outline" className="flex items-center text-xs px-3 py-1.5 h-8" asChild>
                 <a href={resource.fileUrl} download onClick={(e) => e.stopPropagation()}>
-                  <Download className="mr-1 h-3.5 w-3.5" />
+                  <Download className="mr-1.5 h-3.5 w-3.5" />
                   Download
                 </a>
               </Button>
-              <Button size="sm" variant="ghost" className="flex items-center text-xs px-2.5 py-1 h-8" asChild>
+              <Button size="sm" variant="ghost" className="flex items-center text-xs px-3 py-1.5 h-8" asChild>
                 <Link to={`/resources/${resource.id}`} onClick={(e) => e.stopPropagation()}>
-                  <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                   View
                 </Link>
               </Button>
