@@ -32,6 +32,7 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
       try {
         // Initialize local storage with mock data if it doesn't exist
         if (!localStorage.getItem('resources')) {
+          console.log('Initializing local storage with mock data');
           localStorage.setItem('resources', JSON.stringify(MOCK_RESOURCES));
         }
         

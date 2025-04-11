@@ -23,8 +23,8 @@ const AdminDashboard = () => {
   const [newResource, setNewResource] = useState({
     title: '',
     description: '',
-    type: '',
-    subject: '',
+    type: 'Notes',
+    subject: 'Computer Programming',
     semester: 1,
     file: null,
   });
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
       const created = await createResource({
         title: newResource.title,
         description: newResource.description,
-        type: newResource.type || 'Notes',
+        type: newResource.type,
         subject: newResource.subject,
         semester: newResource.semester,
         fileUrl: "#"
@@ -192,8 +192,8 @@ const AdminDashboard = () => {
     setNewResource({
       title: '',
       description: '',
-      type: '',
-      subject: '',
+      type: 'Notes',
+      subject: 'Computer Programming',
       semester: 1,
       file: null,
     });

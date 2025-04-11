@@ -5,25 +5,37 @@ import { ArrowLeft, Calendar, BookOpen, FileText, BookMarked, Download } from "l
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { MOCK_RESOURCES } from "@/data/mockData";
+import { getResourceById } from "@/services/mongodb";
+import { Resource } from "@/types/resource";
+import { useToast } from "@/components/ui/use-toast";
 
 const ResourceDetail = () => {
   const { id } = useParams();
-  const [resource, setResource] = useState<any>(null);
+  const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate fetching resource data
-    const foundResource = MOCK_RESOURCES.find((item) => item.id === Number(id));
+    const fetchResource = async () => {
+      try {
+        if (id) {
+          const foundResource = await getResourceById(Number(id));
+          setResource(foundResource);
+        }
+      } catch (error) {
+        console.error('Error fetching resource:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load resource details",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // Simulate network delay
-    const timer = setTimeout(() => {
-      setResource(foundResource);
-      setLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [id]);
+    fetchResource();
+  }, [id, toast]);
 
   // Get icon based on resource type
   const getIcon = () => {
@@ -104,7 +116,7 @@ const ResourceDetail = () => {
           </Button>
         </div>
         
-        <div className="bg-white rounded-lg shadow-md overflow-hidden p-6">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden p-6 mb-8">
           {/* Resource Header */}
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
             <div className="flex items-start space-x-4">

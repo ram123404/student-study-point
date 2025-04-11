@@ -17,10 +17,19 @@ export const connectToMongoDB = async () => {
   }
 };
 
+// Function to ensure consistent data across components
+const ensureResourcesLoaded = () => {
+  // If resources don't exist in local storage, initialize with empty array
+  if (!localStorage.getItem('resources')) {
+    localStorage.setItem('resources', JSON.stringify([]));
+  }
+};
+
 // Resource CRUD operations
 export const getResources = async (): Promise<Resource[]> => {
   try {
-    // For now, we'll return the mock data
+    ensureResourcesLoaded();
+    // For now, we'll return the local storage data
     // In a real implementation, this would fetch data from MongoDB
     return JSON.parse(localStorage.getItem('resources') || '[]');
   } catch (error) {
@@ -31,6 +40,7 @@ export const getResources = async (): Promise<Resource[]> => {
 
 export const getResourceById = async (id: number): Promise<Resource | null> => {
   try {
+    ensureResourcesLoaded();
     const resources = JSON.parse(localStorage.getItem('resources') || '[]');
     return resources.find((r: Resource) => r.id === id) || null;
   } catch (error) {
@@ -41,6 +51,7 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
 
 export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate'>): Promise<Resource> => {
   try {
+    ensureResourcesLoaded();
     const resources = JSON.parse(localStorage.getItem('resources') || '[]');
     const newResource = {
       ...resource,
@@ -60,6 +71,7 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
 
 export const updateResource = async (id: number, updates: Partial<Resource>): Promise<Resource | null> => {
   try {
+    ensureResourcesLoaded();
     const resources = JSON.parse(localStorage.getItem('resources') || '[]');
     const index = resources.findIndex((r: Resource) => r.id === id);
     
@@ -79,6 +91,7 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
 
 export const deleteResource = async (id: number): Promise<boolean> => {
   try {
+    ensureResourcesLoaded();
     const resources = JSON.parse(localStorage.getItem('resources') || '[]');
     const filteredResources = resources.filter((r: Resource) => r.id !== id);
     
