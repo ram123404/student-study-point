@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
 import ResourceTable from '@/components/admin/ResourceTable';
 import ResourceForm from '@/components/admin/ResourceForm';
+import ResourceFilter from '@/components/admin/ResourceFilter';
 import { Resource } from '@/types/resource';
 import { getResources, createResource, updateResource, deleteResource } from '@/services/mongodb';
 
@@ -13,6 +14,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [resources, setResources] = useState<Resource[]>([]);
+  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentResource, setCurrentResource] = useState<Resource | null>(null);
@@ -27,12 +29,21 @@ const AdminDashboard = () => {
     file: null,
   });
 
+  // Filter state
+  const [filters, setFilters] = useState({
+    type: '',
+    subject: '',
+    semester: '' as number | '',
+    search: '',
+  });
+
   // Fetch resources on component mount
   useEffect(() => {
     const fetchResources = async () => {
       try {
         const data = await getResources();
         setResources(data);
+        setFilteredResources(data);
       } catch (error) {
         console.error('Error fetching resources:', error);
         toast({
@@ -47,6 +58,61 @@ const AdminDashboard = () => {
 
     fetchResources();
   }, [toast]);
+
+  // Apply filters when resources or filters change
+  useEffect(() => {
+    let result = [...resources];
+    
+    // Apply type filter
+    if (filters.type) {
+      result = result.filter(resource => resource.type === filters.type);
+    }
+    
+    // Apply subject filter
+    if (filters.subject) {
+      result = result.filter(resource => resource.subject === filters.subject);
+    }
+    
+    // Apply semester filter
+    if (filters.semester !== '') {
+      result = result.filter(resource => resource.semester === filters.semester);
+    }
+    
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(resource => 
+        resource.title.toLowerCase().includes(searchTerm) ||
+        resource.description.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    setFilteredResources(result);
+  }, [resources, filters]);
+
+  // Filter handlers
+  const handleFilterChange = (filterType: string, value: string | number) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const handleSearchChange = (searchTerm: string) => {
+    setFilters(prev => ({
+      ...prev,
+      search: searchTerm
+    }));
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      type: '',
+      subject: '',
+      semester: '',
+      search: '',
+    });
+  };
 
   // Modal handler for editing resources
   const handleEditClick = (resource: Resource) => {
@@ -215,18 +281,29 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
+          {/* Resource filters */}
+          <ResourceFilter 
+            onFilterChange={handleFilterChange}
+            onSearchChange={handleSearchChange}
+            onReset={resetFilters}
+            filters={filters}
+          />
+
           {/* Resources table */}
           {isLoading ? (
             <div className="text-center py-8">Loading resources...</div>
-          ) : resources.length > 0 ? (
+          ) : filteredResources.length > 0 ? (
             <ResourceTable 
-              resources={resources} 
+              resources={filteredResources} 
               onEdit={handleEditClick} 
               onDelete={handleDelete} 
             />
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No resources found. Add your first resource using the "Add Resource" button.
+              {resources.length > 0 
+                ? "No resources found with the current filters."
+                : "No resources found. Add your first resource using the \"Add Resource\" button."
+              }
             </div>
           )}
         </div>
