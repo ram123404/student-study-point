@@ -48,9 +48,9 @@ const ResourceCard = ({ resource }: ResourceCardProps) => {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden resource-card transition-transform hover:shadow-lg h-full">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden resource-card transition-all hover:shadow-lg hover:translate-y-[-2px] h-full">
       <Link to={`/resources/${resource.id}`} className="block h-full">
-        <div className="p-5 h-full flex flex-col">
+        <div className="p-6 h-full flex flex-col">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start space-x-3">
               <div className={`p-2.5 rounded-md ${getColor()}`}>
@@ -58,7 +58,7 @@ const ResourceCard = ({ resource }: ResourceCardProps) => {
               </div>
               <div>
                 <h3 className="font-semibold text-lg line-clamp-1">{resource.title}</h3>
-                <p className="text-gray-500 text-sm mt-0.5">
+                <p className="text-gray-500 text-sm mt-1">
                   {resource.subject} • Semester {resource.semester}
                 </p>
               </div>
@@ -72,21 +72,21 @@ const ResourceCard = ({ resource }: ResourceCardProps) => {
             {resource.description}
           </p>
           
-          <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
             <span className="text-xs text-gray-500">
               Added on {new Date(resource.uploadDate).toLocaleDateString()}
             </span>
             
             <div className="flex space-x-2">
-              <Button size="sm" variant="outline" className="flex items-center text-xs px-2 py-1 h-auto" asChild>
+              <Button size="sm" variant="outline" className="flex items-center text-xs px-2.5 py-1 h-8" asChild>
                 <a href={resource.fileUrl} download onClick={(e) => e.stopPropagation()}>
-                  <Download className="mr-1 h-3 w-3" />
+                  <Download className="mr-1 h-3.5 w-3.5" />
                   Download
                 </a>
               </Button>
-              <Button size="sm" variant="ghost" className="flex items-center text-xs px-2 py-1 h-auto" asChild>
+              <Button size="sm" variant="ghost" className="flex items-center text-xs px-2.5 py-1 h-8" asChild>
                 <Link to={`/resources/${resource.id}`} onClick={(e) => e.stopPropagation()}>
-                  <ExternalLink className="mr-1 h-3 w-3" />
+                  <ExternalLink className="mr-1 h-3.5 w-3.5" />
                   View
                 </Link>
               </Button>
