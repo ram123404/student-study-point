@@ -75,7 +75,7 @@ const ResourceDetail = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+        <main className="flex-grow container mx-auto px-6 sm:px-8 lg:px-12 py-8 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-pulse h-6 w-24 bg-gray-200 rounded-md mx-auto mb-4"></div>
             <div className="animate-pulse h-4 w-48 bg-gray-200 rounded-md mx-auto"></div>
@@ -90,7 +90,7 @@ const ResourceDetail = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+        <main className="flex-grow container mx-auto px-6 sm:px-8 lg:px-12 py-8 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Resource Not Found</h1>
             <p className="text-gray-600 mb-6">The resource you're looking for doesn't exist or has been removed.</p>
@@ -108,7 +108,7 @@ const ResourceDetail = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-6 sm:px-8 lg:px-12 py-8">
         <div className="mb-6">
           <Button variant="ghost" asChild className="mb-4 pl-0 hover:bg-transparent">
             <Link to="/resources" className="flex items-center text-gray-600">

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AlertCircle, CheckCircle, User, Mail, Lock } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { registerAdmin } from "@/services/mongodb";
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -28,9 +28,7 @@ const AdminRegister = () => {
     }));
   };
 
-  // For demo, we'll use a simple registration process
-  // In a real app, you'd connect to a backend service
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -50,17 +48,12 @@ const AdminRegister = () => {
       return;
     }
     
-    // Simulate API call
-    setTimeout(() => {
-      // Store admin in localStorage (for demo purposes only)
-      const admins = JSON.parse(localStorage.getItem('admins') || '[]');
-      admins.push({
-        id: Date.now(),
+    try {
+      await registerAdmin({
         fullName: formData.fullName,
         email: formData.email,
-        password: formData.password // In real app, you would hash this password
+        password: formData.password
       });
-      localStorage.setItem('admins', JSON.stringify(admins));
       
       toast({
         title: "Registration successful",
@@ -68,15 +61,18 @@ const AdminRegister = () => {
       });
       
       navigate('/admin/login');
+    } catch (error: any) {
+      setError(error.message || 'Failed to register');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow flex items-center justify-center py-12 px-6 sm:px-8 lg:px-12">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-bold text-gray-900">

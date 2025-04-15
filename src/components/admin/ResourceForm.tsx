@@ -34,6 +34,16 @@ const ResourceForm = ({
     fileUrl: '#'
   };
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      // Just for the demo, we'll create a fake URL - in real app this would be handled by MongoDB
+      onChange('fileUrl', URL.createObjectURL(e.target.files[0]));
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
@@ -129,7 +139,7 @@ const ResourceForm = ({
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mt-4">
               <Upload className="mx-auto h-8 w-8 text-gray-400" />
               <p className="mt-2 text-sm text-gray-500">
-                Click to upload or drag and drop
+                {selectedFile ? selectedFile.name : "Click to upload or drag and drop"}
               </p>
               <p className="text-xs text-gray-400">
                 PDF, DOCX, PPT up to 10MB
@@ -138,7 +148,8 @@ const ResourceForm = ({
                 type="file" 
                 className="hidden" 
                 id="file-upload"
-                accept=".pdf,.docx,.ppt,.pptx" 
+                accept=".pdf,.docx,.ppt,.pptx"
+                onChange={handleFileChange}
               />
               <Button 
                 type="button" 

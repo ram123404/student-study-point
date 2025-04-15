@@ -8,12 +8,14 @@ interface MongoDBContextType {
   isConnected: boolean;
   isLoading: boolean;
   error: Error | null;
+  refreshResources: () => Promise<void>;
 }
 
 const MongoDBContext = createContext<MongoDBContextType>({
   isConnected: false,
   isLoading: true,
-  error: null
+  error: null,
+  refreshResources: async () => {}
 });
 
 export const useMongoDBContext = () => useContext(MongoDBContext);
@@ -27,36 +29,46 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const initDatabase = async () => {
-      try {
-        // Initialize local storage with mock data if it doesn't exist
-        if (!localStorage.getItem('resources')) {
-          console.log('Initializing local storage with mock data');
-          localStorage.setItem('resources', JSON.stringify(MOCK_RESOURCES));
-        } else {
-          console.log('Local storage already initialized');
-          console.log('Current resources:', JSON.parse(localStorage.getItem('resources') || '[]'));
-        }
-        
-        // Simulate MongoDB connection
-        await connectToMongoDB();
-        setIsConnected(true);
-      } catch (err) {
-        setError(err as Error);
-        console.error('Failed to initialize MongoDB:', err);
-      } finally {
-        setIsLoading(false);
+  const initDatabase = async () => {
+    try {
+      // Initialize local storage with mock data if it doesn't exist
+      if (!localStorage.getItem('resources')) {
+        console.log('Initializing local storage with mock data');
+        localStorage.setItem('resources', JSON.stringify(MOCK_RESOURCES));
+      } else {
+        console.log('Local storage already initialized');
+        console.log('Current resources:', JSON.parse(localStorage.getItem('resources') || '[]'));
       }
-    };
+      
+      // Connect to MongoDB (simulated in our case)
+      await connectToMongoDB();
+      setIsConnected(true);
+    } catch (err) {
+      setError(err as Error);
+      console.error('Failed to initialize MongoDB:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     initDatabase();
   }, []);
+
+  // Function to refresh resources (can be called after CRUD operations)
+  const refreshResources = async () => {
+    try {
+      await initDatabase();
+    } catch (err) {
+      console.error('Failed to refresh resources:', err);
+    }
+  };
 
   const value = {
     isConnected,
     isLoading,
-    error
+    error,
+    refreshResources
   };
 
   return (

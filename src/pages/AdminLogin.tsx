@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AlertCircle, Lock } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { authenticateAdmin } from "@/services/mongodb";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -16,16 +17,19 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // For demo, we'll use a simple hardcoded login
-  // In a real app, you'd connect to a backend service
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      if (email === 'admin@studypoint.com' && password === 'password123') {
+    try {
+      const isAuthenticated = await authenticateAdmin(email, password);
+      
+      if (isAuthenticated) {
+        // Store authentication state in localStorage for persistence
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        localStorage.setItem('adminEmail', email);
+        
         toast({
           title: "Login successful",
           description: "Welcome to the admin dashboard!",
@@ -34,15 +38,19 @@ const AdminLogin = () => {
       } else {
         setError('Invalid email or password');
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred while logging in');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow flex items-center justify-center py-12 px-6 sm:px-8 lg:px-12">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-bold text-gray-900">

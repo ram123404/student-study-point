@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
@@ -18,6 +19,7 @@ import {
 import { getResources } from "@/services/mongodb";
 import { Resource } from "@/types/resource";
 import { useToast } from "@/components/ui/use-toast";
+import { useMongoDBContext } from "@/contexts/MongoDBContext";
 
 const getSubjectsBySemester = (semesterValue) => {
   if (!semesterValue) return SUBJECTS;
@@ -40,6 +42,7 @@ const getSubjectsBySemester = (semesterValue) => {
 
 const Resources = () => {
   const { toast } = useToast();
+  const { refreshResources } = useMongoDBContext();
   const [resources, setResources] = useState<Resource[]>([]);
   const [allResources, setAllResources] = useState<Resource[]>([]);
   const [filters, setFilters] = useState({
@@ -58,10 +61,10 @@ const Resources = () => {
   useEffect(() => {
     const fetchResources = async () => {
       try {
+        setIsLoading(true);
         const data = await getResources();
         setAllResources(data);
         setResources(data);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching resources:', error);
         toast({
@@ -69,6 +72,7 @@ const Resources = () => {
           description: "Failed to load resources",
           variant: "destructive"
         });
+      } finally {
         setIsLoading(false);
       }
     };
@@ -192,7 +196,7 @@ const Resources = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-6 sm:px-8 lg:px-12 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4 gradient-heading">Academic Resources</h1>
           <p className="text-gray-600">
