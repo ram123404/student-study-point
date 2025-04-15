@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { Resource } from '@/types/resource';
 import { MOCK_RESOURCES } from '@/data/mockData';
 
@@ -32,15 +32,14 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
   const initDatabase = async () => {
     try {
       // Check if Supabase tables exist, if not create them
-      const { error: tablesError } = await supabase
+      const { data, error: tablesError } = await supabase
         .from('resources')
         .select('id')
         .limit(1);
 
-      // If the table doesn't exist or is empty, create it with some initial data
-      if (tablesError) {
-        console.log('Setting up resources table and initial data in Supabase');
-        // In a real implementation, you would create the table via SQL or migrations
+      // If the table exists but is empty, seed it with mock data
+      if (!tablesError && (!data || data.length === 0)) {
+        console.log('Setting up initial data in Supabase');
         
         // Seed the database with mock data
         for (const resource of MOCK_RESOURCES) {
@@ -57,18 +56,21 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
               fileUrl: resource.fileUrl
             });
         }
+      } else if (tablesError) {
+        console.error('Error checking resources table:', tablesError);
       } else {
-        console.log('Supabase resources table already exists');
+        console.log('Supabase resources table already exists with data');
       }
 
-      // Initialize admin users table if needed
-      const { error: adminsError } = await supabase
+      // Check admin users table
+      const { data: adminData, error: adminsError } = await supabase
         .from('admins')
         .select('id')
         .limit(1);
 
-      if (adminsError) {
-        console.log('Setting up admins table with default admin');
+      // If admin table exists but is empty, add default admin
+      if (!adminsError && (!adminData || adminData.length === 0)) {
+        console.log('Setting up default admin user');
         // Create default admin user
         await supabase
           .from('admins')
@@ -77,6 +79,10 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
             full_name: 'Admin User',
             password_hash: 'password123' // In a real app, use proper password hashing
           });
+      } else if (adminsError) {
+        console.error('Error checking admins table:', adminsError);
+      } else {
+        console.log('Admins table already exists with data');
       }
       
       setIsConnected(true);

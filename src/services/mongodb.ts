@@ -40,7 +40,10 @@ export const getResources = async (): Promise<Resource[]> => {
     }
     
     console.log('Fetched resources:', data);
-    return data || [];
+    return data?.map(item => ({
+      ...item,
+      id: Number(item.id)
+    })) || [];
   } catch (error) {
     console.error('Failed to fetch resources:', error);
     return [];
@@ -61,7 +64,7 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
     }
     
     console.log(`Fetched resource with id ${id}:`, data);
-    return data as Resource;
+    return { ...data, id: Number(data.id) } as Resource;
   } catch (error) {
     console.error(`Failed to fetch resource with id ${id}:`, error);
     return null;
@@ -89,7 +92,7 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
     }
     
     console.log('Created resource:', data);
-    return data as Resource;
+    return { ...data, id: Number(data.id) } as Resource;
   } catch (error) {
     console.error('Failed to create resource:', error);
     throw error;
@@ -100,7 +103,7 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
   try {
     const { data, error } = await supabase
       .from('resources')
-      .update(updates)
+      .update({ ...updates, id: id.toString() })
       .eq('id', id.toString())
       .select()
       .single();
@@ -111,7 +114,7 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
     }
     
     console.log(`Updated resource with id ${id}:`, data);
-    return data as Resource;
+    return { ...data, id: Number(data.id) } as Resource;
   } catch (error) {
     console.error(`Failed to update resource with id ${id}:`, error);
     throw error;
@@ -165,7 +168,7 @@ export const authenticateAdmin = async (email: string, password: string): Promis
 export const registerAdmin = async (adminData: { fullName: string, email: string, password: string }): Promise<boolean> => {
   try {
     // Check if email already exists
-    const { data: existingAdmin } = await supabase
+    const { data: existingAdmin, error: checkError } = await supabase
       .from('admins')
       .select('id')
       .eq('email', adminData.email)
@@ -173,6 +176,10 @@ export const registerAdmin = async (adminData: { fullName: string, email: string
     
     if (existingAdmin) {
       throw new Error('Email already in use');
+    }
+    
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is the "no rows found" error code
+      throw checkError;
     }
     
     // Insert new admin
