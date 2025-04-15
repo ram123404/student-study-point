@@ -26,6 +26,7 @@ const AdminDashboard = () => {
     type: 'Notes',
     subject: 'Computer Programming',
     semester: 1,
+    fileUrl: '#',
     file: null,
   });
 
@@ -116,7 +117,8 @@ const AdminDashboard = () => {
 
   // Modal handler for editing resources
   const handleEditClick = (resource: Resource) => {
-    setCurrentResource(resource);
+    console.log("Editing resource:", resource);
+    setCurrentResource({...resource});  // Use a copy to avoid reference issues
     setIsEditModalOpen(true);
   };
 
@@ -127,12 +129,13 @@ const AdminDashboard = () => {
     if (!currentResource) return;
     
     try {
+      console.log("Updating resource:", currentResource);
       const updated = await updateResource(currentResource.id, currentResource);
       
       if (updated) {
         // Update resources list
         setResources(resources.map(resource => 
-          resource.id === currentResource.id ? currentResource : resource
+          resource.id === currentResource.id ? {...currentResource} : resource
         ));
         
         // Show success message
@@ -160,6 +163,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     
     try {
+      console.log("Creating new resource:", newResource);
       // Create new resource
       const created = await createResource({
         title: newResource.title,
@@ -167,7 +171,7 @@ const AdminDashboard = () => {
         type: newResource.type,
         subject: newResource.subject,
         semester: newResource.semester,
-        fileUrl: "#"
+        fileUrl: newResource.fileUrl || "#"
       });
       
       // Add to resources
@@ -195,6 +199,7 @@ const AdminDashboard = () => {
       type: 'Notes',
       subject: 'Computer Programming',
       semester: 1,
+      fileUrl: '#',
       file: null,
     });
   };
@@ -220,6 +225,7 @@ const AdminDashboard = () => {
 
   // Handle form field changes for new resource
   const handleNewResourceChange = (name: string, value: any) => {
+    console.log(`Changing new resource ${name} to:`, value);
     setNewResource(prev => ({
       ...prev,
       [name]: value
@@ -229,10 +235,11 @@ const AdminDashboard = () => {
   // Handle form field changes for editing resource
   const handleEditResourceChange = (name: string, value: any) => {
     if (currentResource) {
-      setCurrentResource({
-        ...currentResource,
+      console.log(`Changing current resource ${name} to:`, value);
+      setCurrentResource(prev => ({
+        ...prev!,
         [name]: value
-      });
+      }));
     }
   };
 
@@ -272,7 +279,7 @@ const AdminDashboard = () => {
 
       {/* Main content */}
       <main className="container mx-auto px-6 py-10">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-lg shadow-md p-8 mx-4 sm:mx-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-xl font-semibold">Manage Resources</h2>
             <Button onClick={() => setIsUploadModalOpen(true)}>

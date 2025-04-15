@@ -38,15 +38,21 @@ const ResourceForm = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSelectedFile(file);
       // Just for the demo, we'll create a fake URL - in real app this would be handled by MongoDB
-      onChange('fileUrl', URL.createObjectURL(e.target.files[0]));
+      onChange('fileUrl', URL.createObjectURL(file));
     }
+  };
+
+  // Ensure the form is properly handling all input changes
+  const handleInputChange = (name: string, value: any) => {
+    onChange(name, value);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 overflow-y-auto max-h-[90vh]">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold">{formTitle}</h3>
           <Button 
@@ -54,6 +60,7 @@ const ResourceForm = ({
             size="sm" 
             className="h-8 w-8 p-0" 
             onClick={onCancel}
+            type="button"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -67,7 +74,7 @@ const ResourceForm = ({
               </label>
               <Input
                 value={currentValues.title}
-                onChange={(e) => onChange('title', e.target.value)}
+                onChange={(e) => handleInputChange('title', e.target.value)}
                 required
                 placeholder="Enter resource title"
               />
@@ -80,7 +87,7 @@ const ResourceForm = ({
               <Textarea
                 className="min-h-[100px]"
                 value={currentValues.description}
-                onChange={(e) => onChange('description', e.target.value)}
+                onChange={(e) => handleInputChange('description', e.target.value)}
                 required
                 placeholder="Enter resource description"
               />
@@ -94,7 +101,7 @@ const ResourceForm = ({
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                   value={currentValues.type}
-                  onChange={(e) => onChange('type', e.target.value)}
+                  onChange={(e) => handleInputChange('type', e.target.value)}
                   required
                 >
                   {RESOURCE_TYPES.map((type) => (
@@ -110,7 +117,7 @@ const ResourceForm = ({
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                   value={currentValues.subject}
-                  onChange={(e) => onChange('subject', e.target.value)}
+                  onChange={(e) => handleInputChange('subject', e.target.value)}
                   required
                 >
                   {SUBJECTS.map((subject) => (
@@ -126,7 +133,7 @@ const ResourceForm = ({
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                   value={currentValues.semester}
-                  onChange={(e) => onChange('semester', parseInt(e.target.value))}
+                  onChange={(e) => handleInputChange('semester', parseInt(e.target.value))}
                   required
                 >
                   {SEMESTERS.map((semester) => (

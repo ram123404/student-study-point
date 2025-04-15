@@ -1,3 +1,4 @@
+
 import { Resource } from '@/types/resource';
 import { MongoClient, ServerApiVersion, ObjectId } from 'mongodb';
 
@@ -111,6 +112,7 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
     const index = resources.findIndex((r: Resource) => r.id === id);
     
     if (index === -1) {
+      console.error(`Resource with id ${id} not found`);
       return null;
     }
     
