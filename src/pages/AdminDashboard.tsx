@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { FileText, LogOut, Plus } from 'lucide-react';
@@ -30,7 +29,6 @@ const AdminDashboard = () => {
     file: null,
   });
 
-  // Filter state
   const [filters, setFilters] = useState({
     type: '',
     subject: '',
@@ -38,7 +36,6 @@ const AdminDashboard = () => {
     search: '',
   });
 
-  // Fetch resources on component mount
   useEffect(() => {
     const fetchResources = async () => {
       try {
@@ -60,26 +57,21 @@ const AdminDashboard = () => {
     fetchResources();
   }, [toast]);
 
-  // Apply filters when resources or filters change
   useEffect(() => {
     let result = [...resources];
     
-    // Apply type filter
     if (filters.type) {
       result = result.filter(resource => resource.type === filters.type);
     }
     
-    // Apply subject filter
     if (filters.subject) {
       result = result.filter(resource => resource.subject === filters.subject);
     }
     
-    // Apply semester filter
     if (filters.semester !== '') {
       result = result.filter(resource => resource.semester === filters.semester);
     }
     
-    // Apply search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       result = result.filter(resource => 
@@ -91,7 +83,6 @@ const AdminDashboard = () => {
     setFilteredResources(result);
   }, [resources, filters]);
 
-  // Filter handlers
   const handleFilterChange = (filterType: string, value: string | number) => {
     setFilters(prev => ({
       ...prev,
@@ -115,14 +106,12 @@ const AdminDashboard = () => {
     });
   };
 
-  // Modal handler for editing resources
   const handleEditClick = (resource: Resource) => {
     console.log("Editing resource:", resource);
-    setCurrentResource({...resource});  // Use a copy to avoid reference issues
+    setCurrentResource({...resource});
     setIsEditModalOpen(true);
   };
 
-  // Handle resource update
   const handleUpdateResource = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -133,12 +122,10 @@ const AdminDashboard = () => {
       const updated = await updateResource(currentResource.id, currentResource);
       
       if (updated) {
-        // Update resources list
         setResources(resources.map(resource => 
           resource.id === currentResource.id ? {...currentResource} : resource
         ));
         
-        // Show success message
         toast({
           title: "Resource updated",
           description: "The resource has been successfully updated.",
@@ -153,18 +140,15 @@ const AdminDashboard = () => {
       });
     }
     
-    // Close modal
     setIsEditModalOpen(false);
     setCurrentResource(null);
   };
 
-  // Handle new resource upload
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       console.log("Creating new resource:", newResource);
-      // Create new resource
       const created = await createResource({
         title: newResource.title,
         description: newResource.description,
@@ -174,13 +158,22 @@ const AdminDashboard = () => {
         fileUrl: newResource.fileUrl || "#"
       });
       
-      // Add to resources
       setResources([created, ...resources]);
       
-      // Show success message
       toast({
         title: "Resource uploaded",
         description: "The resource has been successfully added.",
+      });
+      
+      setIsUploadModalOpen(false);
+      setNewResource({
+        title: '',
+        description: '',
+        type: 'Notes',
+        subject: 'Computer Programming',
+        semester: 1,
+        fileUrl: '#',
+        file: null,
       });
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -190,21 +183,8 @@ const AdminDashboard = () => {
         variant: "destructive"
       });
     }
-    
-    // Close modal and reset form
-    setIsUploadModalOpen(false);
-    setNewResource({
-      title: '',
-      description: '',
-      type: 'Notes',
-      subject: 'Computer Programming',
-      semester: 1,
-      fileUrl: '#',
-      file: null,
-    });
   };
 
-  // Handle delete resource
   const handleDelete = async (id: number) => {
     try {
       await deleteResource(id);
@@ -223,7 +203,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Handle form field changes for new resource
   const handleNewResourceChange = (name: string, value: any) => {
     console.log(`Changing new resource ${name} to:`, value);
     setNewResource(prev => ({
@@ -232,7 +211,6 @@ const AdminDashboard = () => {
     }));
   };
 
-  // Handle form field changes for editing resource
   const handleEditResourceChange = (name: string, value: any) => {
     if (currentResource) {
       console.log(`Changing current resource ${name} to:`, value);
@@ -243,7 +221,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Handle logout
   const handleLogout = () => {
     toast({
       title: "Logged out",
@@ -254,7 +231,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
           <div className="flex items-center space-x-3">
@@ -277,7 +253,6 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="container mx-auto px-6 py-10">
         <div className="bg-white rounded-lg shadow-md p-8 mx-4 sm:mx-8">
           <div className="flex justify-between items-center mb-8">
@@ -288,7 +263,6 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
-          {/* Resource filters */}
           <ResourceFilter 
             onFilterChange={handleFilterChange}
             onSearchChange={handleSearchChange}
@@ -296,7 +270,6 @@ const AdminDashboard = () => {
             filters={filters}
           />
 
-          {/* Resources table */}
           {isLoading ? (
             <div className="text-center py-8">Loading resources...</div>
           ) : filteredResources.length > 0 ? (
@@ -316,7 +289,6 @@ const AdminDashboard = () => {
         </div>
       </main>
 
-      {/* Upload Modal */}
       {isUploadModalOpen && (
         <ResourceForm
           onSubmit={handleUpload}
@@ -327,7 +299,6 @@ const AdminDashboard = () => {
         />
       )}
 
-      {/* Edit Modal */}
       {isEditModalOpen && currentResource && (
         <ResourceForm
           resource={currentResource}
