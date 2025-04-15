@@ -1,9 +1,8 @@
-
 import { Resource } from '@/types/resource';
 import { MongoClient, ServerApiVersion, ObjectId } from 'mongodb';
 
 // MongoDB connection URI - this should be stored in an environment variable in production
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/studypoint';
+const MONGODB_URI = import.meta.env.VITE_MONGODB_URI || 'mongodb://localhost:27017/studypoint';
 let client: MongoClient | null = null;
 let isConnected = false;
 
@@ -159,8 +158,23 @@ export const authenticateAdmin = async (email: string, password: string): Promis
     // Get admins from localStorage (for demo purposes)
     const admins = JSON.parse(localStorage.getItem('admins') || '[]');
     
+    // For the demo, if no admins exist, create a default admin account
+    if (admins.length === 0) {
+      const defaultAdmin = {
+        id: Date.now(),
+        fullName: 'Admin User',
+        email: 'admin@studypoint.com',
+        password: 'password123'
+      };
+      localStorage.setItem('admins', JSON.stringify([defaultAdmin]));
+      console.log('Created default admin account');
+    }
+    
+    // Get updated admin list
+    const updatedAdmins = JSON.parse(localStorage.getItem('admins') || '[]');
+    
     // Check if admin exists with matching credentials
-    const adminFound = admins.find((admin: any) => 
+    const adminFound = updatedAdmins.find((admin: any) => 
       admin.email === email && admin.password === password
     );
     
