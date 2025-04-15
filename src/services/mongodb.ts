@@ -1,62 +1,46 @@
 
 import { Resource } from '@/types/resource';
-import { MongoClient, ServerApiVersion, ObjectId } from 'mongodb';
+import { supabase } from '@/lib/supabase';
 
-// MongoDB connection URI - this should be stored in an environment variable in production
-const MONGODB_URI = import.meta.env.VITE_MONGODB_URI || 'mongodb://localhost:27017/studypoint';
-let client: MongoClient | null = null;
-let isConnected = false;
-
-// Function to connect to MongoDB
+// Function to connect to Supabase
 export const connectToMongoDB = async () => {
   try {
-    console.log('Connecting to MongoDB...');
+    console.log('Connecting to Supabase...');
     
-    // In a real environment, we'd connect to an actual MongoDB instance
-    // For now we'll simulate connection but use localStorage
+    // Test connection by making a simple query
+    const { data, error } = await supabase
+      .from('resources')
+      .select('id')
+      .limit(1);
+
+    if (error) {
+      console.error('Error testing Supabase connection:', error);
+      throw error;
+    }
     
-    // This initialization code should be commented out and used only in production with real MongoDB
-    /*
-    client = new MongoClient(MONGODB_URI, {
-      serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-      }
-    });
-    await client.connect();
-    */
-    
-    // Simulate successful connection by checking/initializing local storage
-    ensureResourcesLoaded();
-    
-    console.log('Connected to MongoDB');
-    isConnected = true;
+    console.log('Connected to Supabase');
     return true;
   } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
-    isConnected = false;
+    console.error('Failed to connect to Supabase:', error);
     throw error;
-  }
-};
-
-// Function to ensure consistent data across components
-const ensureResourcesLoaded = () => {
-  // If resources don't exist in local storage, initialize with empty array
-  if (!localStorage.getItem('resources')) {
-    localStorage.setItem('resources', JSON.stringify([]));
   }
 };
 
 // Resource CRUD operations
 export const getResources = async (): Promise<Resource[]> => {
   try {
-    ensureResourcesLoaded();
-    // For now, we'll return the local storage data
-    // In production, this would use: return await client.db().collection('resources').find().toArray();
-    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    console.log('Fetched resources:', resources);
-    return resources;
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*')
+      .order('uploadDate', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching resources:', error);
+      throw error;
+    }
+    
+    console.log('Fetched resources:', data);
+    return data || [];
   } catch (error) {
     console.error('Failed to fetch resources:', error);
     return [];
@@ -65,14 +49,19 @@ export const getResources = async (): Promise<Resource[]> => {
 
 export const getResourceById = async (id: number): Promise<Resource | null> => {
   try {
-    ensureResourcesLoaded();
-    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    const resource = resources.find((r: Resource) => r.id === id) || null;
-    console.log(`Fetched resource with id ${id}:`, resource);
-    return resource;
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*')
+      .eq('id', id.toString())
+      .single();
     
-    // In production with real MongoDB, we would use:
-    // return await client.db().collection('resources').findOne({ _id: new ObjectId(id) });
+    if (error) {
+      console.error(`Error fetching resource with id ${id}:`, error);
+      return null;
+    }
+    
+    console.log(`Fetched resource with id ${id}:`, data);
+    return data as Resource;
   } catch (error) {
     console.error(`Failed to fetch resource with id ${id}:`, error);
     return null;
@@ -81,24 +70,26 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
 
 export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate'>): Promise<Resource> => {
   try {
-    ensureResourcesLoaded();
-    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    
+    // Generate a unique ID and add upload date
     const newResource = {
       ...resource,
-      id: Date.now(),
+      id: Date.now().toString(),
       uploadDate: new Date().toISOString().split('T')[0]
     };
     
-    resources.push(newResource);
-    localStorage.setItem('resources', JSON.stringify(resources));
-    console.log('Created resource:', newResource);
+    const { data, error } = await supabase
+      .from('resources')
+      .insert(newResource)
+      .select()
+      .single();
     
-    // In production with real MongoDB:
-    // const result = await client.db().collection('resources').insertOne(newResource);
-    // return { ...newResource, _id: result.insertedId };
+    if (error) {
+      console.error('Error creating resource:', error);
+      throw error;
+    }
     
-    return newResource;
+    console.log('Created resource:', data);
+    return data as Resource;
   } catch (error) {
     console.error('Failed to create resource:', error);
     throw error;
@@ -107,28 +98,20 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
 
 export const updateResource = async (id: number, updates: Partial<Resource>): Promise<Resource | null> => {
   try {
-    ensureResourcesLoaded();
-    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    const index = resources.findIndex((r: Resource) => r.id === id);
+    const { data, error } = await supabase
+      .from('resources')
+      .update(updates)
+      .eq('id', id.toString())
+      .select()
+      .single();
     
-    if (index === -1) {
-      console.error(`Resource with id ${id} not found`);
-      return null;
+    if (error) {
+      console.error(`Error updating resource with id ${id}:`, error);
+      throw error;
     }
     
-    const updatedResource = { ...resources[index], ...updates };
-    resources[index] = updatedResource;
-    localStorage.setItem('resources', JSON.stringify(resources));
-    console.log(`Updated resource with id ${id}:`, updatedResource);
-    
-    // In production with real MongoDB:
-    // await client.db().collection('resources').updateOne(
-    //   { _id: new ObjectId(id) },
-    //   { $set: updates }
-    // );
-    // return await client.db().collection('resources').findOne({ _id: new ObjectId(id) });
-    
-    return updatedResource;
+    console.log(`Updated resource with id ${id}:`, data);
+    return data as Resource;
   } catch (error) {
     console.error(`Failed to update resource with id ${id}:`, error);
     throw error;
@@ -137,16 +120,17 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
 
 export const deleteResource = async (id: number): Promise<boolean> => {
   try {
-    ensureResourcesLoaded();
-    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
-    const filteredResources = resources.filter((r: Resource) => r.id !== id);
+    const { error } = await supabase
+      .from('resources')
+      .delete()
+      .eq('id', id.toString());
     
-    localStorage.setItem('resources', JSON.stringify(filteredResources));
+    if (error) {
+      console.error(`Error deleting resource with id ${id}:`, error);
+      throw error;
+    }
+    
     console.log(`Deleted resource with id ${id}`);
-    
-    // In production with real MongoDB:
-    // await client.db().collection('resources').deleteOne({ _id: new ObjectId(id) });
-    
     return true;
   } catch (error) {
     console.error(`Failed to delete resource with id ${id}:`, error);
@@ -157,37 +141,21 @@ export const deleteResource = async (id: number): Promise<boolean> => {
 // Authentication methods
 export const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
   try {
-    // Get admins from localStorage (for demo purposes)
-    const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+    // In a real application, you would use Supabase Auth
+    // For now, we'll query the admins table directly
+    const { data, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('email', email)
+      .eq('password_hash', password) // In a real app, use proper password verification
+      .single();
     
-    // For the demo, if no admins exist, create a default admin account
-    if (admins.length === 0) {
-      const defaultAdmin = {
-        id: Date.now(),
-        fullName: 'Admin User',
-        email: 'admin@studypoint.com',
-        password: 'password123'
-      };
-      localStorage.setItem('admins', JSON.stringify([defaultAdmin]));
-      console.log('Created default admin account');
+    if (error || !data) {
+      console.error('Authentication error:', error);
+      return false;
     }
     
-    // Get updated admin list
-    const updatedAdmins = JSON.parse(localStorage.getItem('admins') || '[]');
-    
-    // Check if admin exists with matching credentials
-    const adminFound = updatedAdmins.find((admin: any) => 
-      admin.email === email && admin.password === password
-    );
-    
-    // In production with real MongoDB:
-    // const admin = await client.db().collection('admins').findOne({ email });
-    // Use proper password comparison with bcrypt or similar
-    // if (admin && await bcrypt.compare(password, admin.password)) {
-    //   return true;
-    // }
-    
-    return !!adminFound;
+    return true;
   } catch (error) {
     console.error('Authentication failed:', error);
     return false;
@@ -196,31 +164,30 @@ export const authenticateAdmin = async (email: string, password: string): Promis
 
 export const registerAdmin = async (adminData: { fullName: string, email: string, password: string }): Promise<boolean> => {
   try {
-    // Get current admins
-    const admins = JSON.parse(localStorage.getItem('admins') || '[]');
-    
     // Check if email already exists
-    if (admins.some((admin: any) => admin.email === adminData.email)) {
+    const { data: existingAdmin } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('email', adminData.email)
+      .single();
+    
+    if (existingAdmin) {
       throw new Error('Email already in use');
     }
     
-    // Add new admin
-    admins.push({
-      id: Date.now(),
-      ...adminData
-      // In production: password: await bcrypt.hash(adminData.password, 10)
-    });
+    // Insert new admin
+    const { error } = await supabase
+      .from('admins')
+      .insert({
+        email: adminData.email,
+        full_name: adminData.fullName,
+        password_hash: adminData.password // In a real app, use proper password hashing
+      });
     
-    // Save to localStorage
-    localStorage.setItem('admins', JSON.stringify(admins));
-    
-    // In production with real MongoDB:
-    // const hashedPassword = await bcrypt.hash(adminData.password, 10);
-    // await client.db().collection('admins').insertOne({
-    //   ...adminData,
-    //   password: hashedPassword,
-    //   createdAt: new Date()
-    // });
+    if (error) {
+      console.error('Error registering admin:', error);
+      throw error;
+    }
     
     return true;
   } catch (error) {

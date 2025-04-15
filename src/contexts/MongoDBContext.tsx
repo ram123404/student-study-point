@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { connectToMongoDB } from '@/services/mongodb';
+import { supabase } from '@/lib/supabase';
 import { Resource } from '@/types/resource';
 import { MOCK_RESOURCES } from '@/data/mockData';
 
@@ -31,21 +31,58 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
 
   const initDatabase = async () => {
     try {
-      // Initialize local storage with mock data if it doesn't exist
-      if (!localStorage.getItem('resources')) {
-        console.log('Initializing local storage with mock data');
-        localStorage.setItem('resources', JSON.stringify(MOCK_RESOURCES));
+      // Check if Supabase tables exist, if not create them
+      const { error: tablesError } = await supabase
+        .from('resources')
+        .select('id')
+        .limit(1);
+
+      // If the table doesn't exist or is empty, create it with some initial data
+      if (tablesError) {
+        console.log('Setting up resources table and initial data in Supabase');
+        // In a real implementation, you would create the table via SQL or migrations
+        
+        // Seed the database with mock data
+        for (const resource of MOCK_RESOURCES) {
+          await supabase
+            .from('resources')
+            .insert({
+              id: resource.id.toString(),
+              title: resource.title,
+              description: resource.description,
+              type: resource.type,
+              subject: resource.subject,
+              semester: resource.semester,
+              uploadDate: resource.uploadDate,
+              fileUrl: resource.fileUrl
+            });
+        }
       } else {
-        console.log('Local storage already initialized');
-        console.log('Current resources:', JSON.parse(localStorage.getItem('resources') || '[]'));
+        console.log('Supabase resources table already exists');
+      }
+
+      // Initialize admin users table if needed
+      const { error: adminsError } = await supabase
+        .from('admins')
+        .select('id')
+        .limit(1);
+
+      if (adminsError) {
+        console.log('Setting up admins table with default admin');
+        // Create default admin user
+        await supabase
+          .from('admins')
+          .insert({
+            email: 'admin@studypoint.com',
+            full_name: 'Admin User',
+            password_hash: 'password123' // In a real app, use proper password hashing
+          });
       }
       
-      // Connect to MongoDB (simulated in our case)
-      await connectToMongoDB();
       setIsConnected(true);
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to initialize MongoDB:', err);
+      console.error('Failed to initialize Supabase:', err);
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +92,7 @@ export const MongoDBProvider = ({ children }: MongoDBProviderProps) => {
     initDatabase();
   }, []);
 
-  // Function to refresh resources (can be called after CRUD operations)
+  // Function to refresh resources
   const refreshResources = async () => {
     try {
       await initDatabase();
