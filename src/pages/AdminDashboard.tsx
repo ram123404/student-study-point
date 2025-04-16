@@ -1,13 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { FileText, LogOut, Plus } from 'lucide-react';
+import { FileText, LogOut, Plus, BookOpen, Layers } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
 import ResourceTable from '@/components/admin/ResourceTable';
 import ResourceForm from '@/components/admin/ResourceForm';
 import ResourceFilter from '@/components/admin/ResourceFilter';
+import FieldsManager from '@/components/admin/FieldsManager';
+import SubjectsManager from '@/components/admin/SubjectsManager';
 import { Resource } from '@/types/resource';
 import { getResources, createResource, updateResource, deleteResource } from '@/services/mongodb';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -27,6 +31,7 @@ const AdminDashboard = () => {
     semester: 1,
     fileUrl: '#',
     file: null,
+    field: 'BCA'
   });
 
   const [filters, setFilters] = useState({
@@ -34,6 +39,7 @@ const AdminDashboard = () => {
     subject: '',
     semester: '' as number | '',
     search: '',
+    field: '',
   });
 
   useEffect(() => {
@@ -59,6 +65,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     let result = [...resources];
+    
+    if (filters.field) {
+      result = result.filter(resource => resource.field === filters.field);
+    }
     
     if (filters.type) {
       result = result.filter(resource => resource.type === filters.type);
@@ -103,6 +113,7 @@ const AdminDashboard = () => {
       subject: '',
       semester: '',
       search: '',
+      field: '',
     });
   };
 
@@ -155,7 +166,8 @@ const AdminDashboard = () => {
         type: newResource.type,
         subject: newResource.subject,
         semester: newResource.semester,
-        fileUrl: newResource.fileUrl || "#"
+        fileUrl: newResource.fileUrl || "#",
+        field: newResource.field
       });
       
       setResources([created, ...resources]);
@@ -174,6 +186,7 @@ const AdminDashboard = () => {
         semester: 1,
         fileUrl: '#',
         file: null,
+        field: 'BCA'
       });
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -254,39 +267,64 @@ const AdminDashboard = () => {
       </header>
 
       <main className="container mx-auto px-6 py-10">
-        <div className="bg-white rounded-lg shadow-md p-8 mx-4 sm:mx-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-semibold">Manage Resources</h2>
-            <Button onClick={() => setIsUploadModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Resource
-            </Button>
-          </div>
-
-          <ResourceFilter 
-            onFilterChange={handleFilterChange}
-            onSearchChange={handleSearchChange}
-            onReset={resetFilters}
-            filters={filters}
-          />
-
-          {isLoading ? (
-            <div className="text-center py-8">Loading resources...</div>
-          ) : filteredResources.length > 0 ? (
-            <ResourceTable 
-              resources={filteredResources} 
-              onEdit={handleEditClick} 
-              onDelete={handleDelete} 
-            />
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              {resources.length > 0 
-                ? "No resources found with the current filters."
-                : "No resources found. Add your first resource using the \"Add Resource\" button."
-              }
+        <Tabs defaultValue="resources" className="bg-white rounded-lg shadow-md p-8 mx-4 sm:mx-8">
+          <TabsList className="mb-8 grid w-full grid-cols-3">
+            <TabsTrigger value="resources" className="flex items-center">
+              <FileText className="h-4 w-4 mr-2" />
+              <span>Resources</span>
+            </TabsTrigger>
+            <TabsTrigger value="fields" className="flex items-center">
+              <Layers className="h-4 w-4 mr-2" />
+              <span>Fields</span>
+            </TabsTrigger>
+            <TabsTrigger value="subjects" className="flex items-center">
+              <BookOpen className="h-4 w-4 mr-2" />
+              <span>Subjects</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="resources">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold">Manage Resources</h2>
+              <Button onClick={() => setIsUploadModalOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Resource
+              </Button>
             </div>
-          )}
-        </div>
+
+            <ResourceFilter 
+              onFilterChange={handleFilterChange}
+              onSearchChange={handleSearchChange}
+              onReset={resetFilters}
+              filters={filters}
+            />
+
+            {isLoading ? (
+              <div className="text-center py-8">Loading resources...</div>
+            ) : filteredResources.length > 0 ? (
+              <ResourceTable 
+                resources={filteredResources} 
+                onEdit={handleEditClick} 
+                onDelete={handleDelete} 
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                {resources.length > 0 
+                  ? "No resources found with the current filters."
+                  : "No resources found. Add your first resource using the \"Add Resource\" button."
+                }
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="fields">
+            <FieldsManager />
+          </TabsContent>
+          
+          <TabsContent value="subjects">
+            <SubjectsManager />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {isUploadModalOpen && (

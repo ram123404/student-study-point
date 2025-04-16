@@ -1,18 +1,20 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, BookOpen, FileText, BookMarked, Download } from "lucide-react";
+import { ArrowLeft, Calendar, BookOpen, FileText, BookMarked, Download, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getResourceById } from "@/services/mongodb";
 import { Resource } from "@/types/resource";
 import { useToast } from "@/components/ui/use-toast";
+import ResourcePreview from "@/components/ResourcePreview";
 
 const ResourceDetail = () => {
   const { id } = useParams();
   const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -133,6 +135,9 @@ const ResourceDetail = () => {
                     Subject: {resource.subject}
                   </span>
                   <span className="flex items-center">
+                    • {resource.field || "BCA"}
+                  </span>
+                  <span className="flex items-center">
                     • Semester {resource.semester}
                   </span>
                   <span className="flex items-center">
@@ -168,8 +173,13 @@ const ResourceDetail = () => {
           </div>
           
           {/* Download Section */}
-          <div className="border-t pt-6">
-            <Button className="w-full sm:w-auto" asChild>
+          <div className="border-t pt-6 flex flex-wrap gap-3">
+            <Button onClick={() => setShowPreview(true)} variant="outline">
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
+            
+            <Button asChild>
               <a href={resource.fileUrl} download>
                 <Download className="mr-2 h-4 w-4" />
                 Download Resource
@@ -178,6 +188,13 @@ const ResourceDetail = () => {
           </div>
         </div>
       </main>
+      
+      {showPreview && resource && (
+        <ResourcePreview 
+          resource={resource} 
+          onClose={() => setShowPreview(false)} 
+        />
+      )}
       
       <Footer />
     </div>

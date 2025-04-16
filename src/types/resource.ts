@@ -8,5 +8,5 @@ export interface Resource {
   semester: number;
   uploadDate: string;
   fileUrl: string;
-  field?: string; // Adding field of study (BCA, BBA, BIM, etc.)
+  field: string; // Field of study (BCA, BBA, BIM, etc.)
 }
