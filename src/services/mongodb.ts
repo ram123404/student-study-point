@@ -92,7 +92,11 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
     }
     
     console.log('Created resource:', data);
-    return { ...data, id: Number(data.id) } as Resource;
+    return { 
+      ...data, 
+      id: Number(data.id),
+      uploadDate: data.uploadDate || newResource.uploadDate
+    } as Resource;
   } catch (error) {
     console.error('Failed to create resource:', error);
     throw error;

@@ -37,35 +37,35 @@ export type Database = {
         Row: {
           created_at: string
           description: string
-          fileurl: string
+          fileUrl: string
           id: string
           semester: number
           subject: string
           title: string
           type: string
-          uploaddate: string
+          uploadDate: string
         }
         Insert: {
           created_at?: string
           description: string
-          fileurl: string
+          fileUrl: string
           id: string
           semester: number
           subject: string
           title: string
           type: string
-          uploaddate: string
+          uploadDate: string
         }
         Update: {
           created_at?: string
           description?: string
-          fileurl?: string
+          fileUrl?: string
           id?: string
           semester?: number
           subject?: string
           title?: string
           type?: string
-          uploaddate?: string
+          uploadDate?: string
         }
         Relationships: []
       }
