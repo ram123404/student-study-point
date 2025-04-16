@@ -3,7 +3,7 @@ import React from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RESOURCE_TYPES, SUBJECTS, SEMESTERS } from "@/data/mockData";
+import { RESOURCE_TYPES, SUBJECTS, SEMESTERS, FIELDS_OF_STUDY } from "@/data/mockData";
 
 interface ResourceFilterProps {
   onFilterChange: (filterType: string, value: string | number) => void;
@@ -14,6 +14,7 @@ interface ResourceFilterProps {
     subject: string;
     semester: number | '';
     search: string;
+    field?: string;
   };
 }
 
@@ -36,7 +37,21 @@ const ResourceFilter = ({
           />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Field of Study</label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={filters.field || ""}
+              onChange={(e) => onFilterChange('field', e.target.value)}
+            >
+              <option value="">All Fields</option>
+              {FIELDS_OF_STUDY.map((field) => (
+                <option key={field} value={field}>{field}</option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Type</label>
             <select

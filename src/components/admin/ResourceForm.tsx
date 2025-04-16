@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, X } from 'lucide-react';
-import { RESOURCE_TYPES, SUBJECTS, SEMESTERS } from "@/data/mockData";
+import { RESOURCE_TYPES, SUBJECTS, SEMESTERS, FIELDS_OF_STUDY, SUBJECTS_BY_FIELD_AND_SEMESTER } from "@/data/mockData";
 import { Resource } from "@/types/resource";
 
 interface ResourceFormProps {
@@ -31,10 +31,32 @@ const ResourceForm = ({
     type: resource?.type || RESOURCE_TYPES[0],
     subject: resource?.subject || SUBJECTS[0],
     semester: resource?.semester || SEMESTERS[0],
-    fileUrl: resource?.fileUrl || '#'
+    fileUrl: resource?.fileUrl || '#',
+    field: resource?.field || FIELDS_OF_STUDY[0]
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>(SUBJECTS);
+
+  // Update available subjects when field and semester change
+  useEffect(() => {
+    if (formValues.field && formValues.semester) {
+      const fieldSubjects = SUBJECTS_BY_FIELD_AND_SEMESTER[formValues.field as keyof typeof SUBJECTS_BY_FIELD_AND_SEMESTER];
+      if (fieldSubjects) {
+        const semesterSubjects = fieldSubjects[formValues.semester as keyof typeof fieldSubjects];
+        setAvailableSubjects(semesterSubjects || SUBJECTS);
+        
+        // If current subject is not in the new subjects list, reset it
+        if (semesterSubjects && !semesterSubjects.includes(formValues.subject)) {
+          handleInputChange('subject', semesterSubjects[0] || '');
+        }
+      } else {
+        setAvailableSubjects(SUBJECTS);
+      }
+    } else {
+      setAvailableSubjects(SUBJECTS);
+    }
+  }, [formValues.field, formValues.semester]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -102,7 +124,23 @@ const ResourceForm = ({
               />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Field of Study
+                </label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  value={formValues.field}
+                  onChange={(e) => handleInputChange('field', e.target.value)}
+                  required
+                >
+                  {FIELDS_OF_STUDY.map((field) => (
+                    <option key={field} value={field}>{field}</option>
+                  ))}
+                </select>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Type
@@ -118,23 +156,9 @@ const ResourceForm = ({
                   ))}
                 </select>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Subject
-                </label>
-                <select
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                  value={formValues.subject}
-                  onChange={(e) => handleInputChange('subject', e.target.value)}
-                  required
-                >
-                  {SUBJECTS.map((subject) => (
-                    <option key={subject} value={subject}>{subject}</option>
-                  ))}
-                </select>
-              </div>
-              
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Semester
@@ -147,6 +171,22 @@ const ResourceForm = ({
                 >
                   {SEMESTERS.map((semester) => (
                     <option key={semester} value={semester}>Semester {semester}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Subject
+                </label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  value={formValues.subject}
+                  onChange={(e) => handleInputChange('subject', e.target.value)}
+                  required
+                >
+                  {availableSubjects.map((subject) => (
+                    <option key={subject} value={subject}>{subject}</option>
                   ))}
                 </select>
               </div>

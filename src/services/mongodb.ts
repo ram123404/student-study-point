@@ -1,4 +1,3 @@
-
 import { Resource } from '@/types/resource';
 import { supabase } from '@/lib/supabase';
 
@@ -42,7 +41,8 @@ export const getResources = async (): Promise<Resource[]> => {
     console.log('Fetched resources:', data);
     return data?.map(item => ({
       ...item,
-      id: Number(item.id)
+      id: Number(item.id),
+      field: item.field || "BCA" // Default to BCA for existing resources
     })) || [];
   } catch (error) {
     console.error('Failed to fetch resources:', error);
@@ -64,7 +64,11 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
     }
     
     console.log(`Fetched resource with id ${id}:`, data);
-    return { ...data, id: Number(data.id) } as Resource;
+    return { 
+      ...data, 
+      id: Number(data.id),
+      field: data.field || "BCA" // Default to BCA for existing resources
+    } as Resource;
   } catch (error) {
     console.error(`Failed to fetch resource with id ${id}:`, error);
     return null;
@@ -77,7 +81,8 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
     const newResource = {
       ...resource,
       id: Date.now().toString(),
-      uploadDate: new Date().toISOString().split('T')[0]
+      uploadDate: new Date().toISOString().split('T')[0],
+      field: resource.field || "BCA" // Ensure field is set
     };
     
     const { data, error } = await supabase
@@ -95,7 +100,8 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
     return { 
       ...data, 
       id: Number(data.id),
-      uploadDate: data.uploadDate || newResource.uploadDate
+      uploadDate: data.uploadDate || newResource.uploadDate,
+      field: data.field || newResource.field
     } as Resource;
   } catch (error) {
     console.error('Failed to create resource:', error);
@@ -118,7 +124,11 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
     }
     
     console.log(`Updated resource with id ${id}:`, data);
-    return { ...data, id: Number(data.id) } as Resource;
+    return { 
+      ...data, 
+      id: Number(data.id),
+      field: data.field || "BCA" // Default to BCA for existing resources
+    } as Resource;
   } catch (error) {
     console.error(`Failed to update resource with id ${id}:`, error);
     throw error;

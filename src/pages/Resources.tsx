@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ResourceCard from "@/components/ResourceCard";
-import { SEMESTERS, SUBJECTS, RESOURCE_TYPES } from "@/data/mockData";
+import { SEMESTERS, SUBJECTS, RESOURCE_TYPES, FIELDS_OF_STUDY, SUBJECTS_BY_FIELD_AND_SEMESTER } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import {
@@ -21,23 +20,31 @@ import { Resource } from "@/types/resource";
 import { useToast } from "@/components/ui/use-toast";
 import { useMongoDBContext } from "@/contexts/MongoDBContext";
 
-const getSubjectsBySemester = (semesterValue) => {
-  if (!semesterValue) return SUBJECTS;
+const getSubjectsByFieldAndSemester = (field, semesterValue) => {
+  if (!field && !semesterValue) return SUBJECTS;
   
+  if (field && !semesterValue) {
+    // Return all subjects for the selected field
+    const fieldSubjects = [];
+    const semesterMapping = SUBJECTS_BY_FIELD_AND_SEMESTER[field];
+    if (semesterMapping) {
+      for (const semester in semesterMapping) {
+        fieldSubjects.push(...semesterMapping[semester]);
+      }
+      return [...new Set(fieldSubjects)]; // Remove duplicates
+    }
+    return SUBJECTS;
+  }
+  
+  if (!field && semesterValue) {
+    // Return default semester mapping (BCA)
+    const semesterNum = parseInt(semesterValue);
+    return SUBJECTS_BY_FIELD_AND_SEMESTER["BCA"][semesterNum] || SUBJECTS;
+  }
+  
+  // Both field and semester are provided
   const semesterNum = parseInt(semesterValue);
-  
-  const subjectMapping = {
-    1: ["Computer Programming", "Digital Logic", "Mathematics I"],
-    2: ["Object-Oriented Programming", "Mathematics II", "Web Development"],
-    3: ["Data Structures and Algorithms", "Database Management Systems", "Software Engineering"],
-    4: ["Computer Networks", "Operating Systems", "Computer Architecture"],
-    5: ["Artificial Intelligence", "Mobile Application Development", "Computer Graphics"],
-    6: ["Web Development", "Machine Learning", "Data Science"],
-    7: ["Cloud Computing", "Big Data Analytics", "Information Security"],
-    8: ["Project Work", "Internship", "Emerging Technologies"]
-  };
-  
-  return subjectMapping[semesterNum] || SUBJECTS;
+  return SUBJECTS_BY_FIELD_AND_SEMESTER[field]?.[semesterNum] || SUBJECTS;
 };
 
 const Resources = () => {
@@ -50,6 +57,7 @@ const Resources = () => {
     subject: "",
     type: "",
     searchQuery: "",
+    field: "",
   });
   const [availableSubjects, setAvailableSubjects] = useState(SUBJECTS);
   const [showFilters, setShowFilters] = useState(false);
@@ -81,18 +89,24 @@ const Resources = () => {
   }, [toast]);
 
   useEffect(() => {
-    setAvailableSubjects(getSubjectsBySemester(filters.semester));
+    setAvailableSubjects(getSubjectsByFieldAndSemester(filters.field, filters.semester));
     
-    if (filters.semester && filters.subject) {
-      const newSubjects = getSubjectsBySemester(filters.semester);
+    if ((filters.field || filters.semester) && filters.subject) {
+      const newSubjects = getSubjectsByFieldAndSemester(filters.field, filters.semester);
       if (!newSubjects.includes(filters.subject)) {
         setFilters(prev => ({...prev, subject: ""}));
       }
     }
-  }, [filters.semester]);
+  }, [filters.semester, filters.field]);
 
   useEffect(() => {
     let filteredResults = [...allResources];
+
+    if (filters.field) {
+      filteredResults = filteredResults.filter(
+        (resource) => resource.field === filters.field
+      );
+    }
 
     if (filters.semester) {
       filteredResults = filteredResults.filter(
@@ -138,6 +152,7 @@ const Resources = () => {
       subject: "",
       type: "",
       searchQuery: "",
+      field: "",
     });
   };
 
@@ -200,7 +215,7 @@ const Resources = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4 gradient-heading">Academic Resources</h1>
           <p className="text-gray-600">
-            Browse and download BCA study materials, past exam questions, notes, and syllabi.
+            Browse and download study materials, past exam questions, notes, and syllabi across multiple fields of study.
           </p>
         </div>
 
@@ -231,7 +246,23 @@ const Resources = () => {
             </div>
           </div>
 
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Field of Study
+              </label>
+              <select
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+                value={filters.field}
+                onChange={(e) => handleFilterChange("field", e.target.value)}
+              >
+                <option value="">All Fields</option>
+                {FIELDS_OF_STUDY.map((field) => (
+                  <option key={field} value={field}>{field}</option>
+                ))}
+              </select>
+            </div>
+            
             <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Semester

@@ -1,4 +1,3 @@
-
 export const MOCK_RESOURCES = [
   {
     id: 1,
@@ -9,6 +8,7 @@ export const MOCK_RESOURCES = [
     semester: 1,
     uploadDate: "2023-09-15",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 2,
@@ -19,6 +19,7 @@ export const MOCK_RESOURCES = [
     semester: 1,
     uploadDate: "2023-08-25",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 3,
@@ -29,6 +30,7 @@ export const MOCK_RESOURCES = [
     semester: 1,
     uploadDate: "2023-10-05",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 4,
@@ -39,6 +41,7 @@ export const MOCK_RESOURCES = [
     semester: 3,
     uploadDate: "2023-09-10",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 5,
@@ -49,6 +52,7 @@ export const MOCK_RESOURCES = [
     semester: 4,
     uploadDate: "2023-07-20",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 6,
@@ -59,6 +63,7 @@ export const MOCK_RESOURCES = [
     semester: 3,
     uploadDate: "2023-08-05",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 7,
@@ -69,6 +74,7 @@ export const MOCK_RESOURCES = [
     semester: 2,
     uploadDate: "2023-07-12",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 8,
@@ -79,6 +85,7 @@ export const MOCK_RESOURCES = [
     semester: 4,
     uploadDate: "2023-06-30",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 9,
@@ -89,6 +96,7 @@ export const MOCK_RESOURCES = [
     semester: 5,
     uploadDate: "2023-09-01",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 10,
@@ -99,6 +107,7 @@ export const MOCK_RESOURCES = [
     semester: 4,
     uploadDate: "2023-08-18",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 11,
@@ -109,6 +118,7 @@ export const MOCK_RESOURCES = [
     semester: 5,
     uploadDate: "2023-09-25",
     fileUrl: "#",
+    field: "BCA",
   },
   {
     id: 12,
@@ -119,10 +129,86 @@ export const MOCK_RESOURCES = [
     semester: 3,
     uploadDate: "2023-07-05",
     fileUrl: "#",
+    field: "BCA",
+  },
+  {
+    id: 13,
+    title: "Principles of Management",
+    description: "Comprehensive notes covering management theories, organizational behavior, leadership styles, motivation techniques, and decision-making processes.",
+    type: "Notes",
+    subject: "Management Principles",
+    semester: 1,
+    uploadDate: "2023-10-10",
+    fileUrl: "#",
+    field: "BBA",
+  },
+  {
+    id: 14,
+    title: "Financial Accounting Basics",
+    description: "Essential accounting principles, balance sheets, income statements, cash flow analysis, and financial ratios with practical examples.",
+    type: "Notes",
+    subject: "Financial Accounting",
+    semester: 1,
+    uploadDate: "2023-09-20",
+    fileUrl: "#",
+    field: "BBA",
+  },
+  {
+    id: 15,
+    title: "Marketing Management Syllabus",
+    description: "Detailed course outline covering market analysis, consumer behavior, marketing strategies, product development, and digital marketing concepts.",
+    type: "Syllabus",
+    subject: "Marketing Management",
+    semester: 2,
+    uploadDate: "2023-08-15",
+    fileUrl: "#",
+    field: "BBA",
+  },
+  {
+    id: 16,
+    title: "Database Design Principles",
+    description: "Comprehensive notes on database normalization, ER diagrams, SQL queries, transaction management, and database security for information systems.",
+    type: "Notes",
+    subject: "Database Management",
+    semester: 2,
+    uploadDate: "2023-07-25",
+    fileUrl: "#",
+    field: "BIM",
+  },
+  {
+    id: 17,
+    title: "Business Intelligence Systems",
+    description: "Advanced concepts in data warehousing, OLAP, data mining, decision support systems, and business analytics frameworks with case studies.",
+    type: "Notes",
+    subject: "Business Intelligence",
+    semester: 4,
+    uploadDate: "2023-08-30",
+    fileUrl: "#",
+    field: "BIM",
+  },
+  {
+    id: 18,
+    title: "IT Project Management Question Bank",
+    description: "Comprehensive collection of questions covering project initiation, planning, execution, monitoring, risk management, and agile methodologies.",
+    type: "Questions",
+    subject: "IT Project Management",
+    semester: 3,
+    uploadDate: "2023-09-05",
+    fileUrl: "#",
+    field: "BIM",
   }
 ];
 
 export const SEMESTERS = Array.from({ length: 8 }, (_, i) => i + 1);
+
+export const FIELDS_OF_STUDY = [
+  "BCA",
+  "BBA",
+  "BIM",
+  "BSc.CSIT",
+  "MBA",
+  "MCA"
+];
 
 export const SUBJECTS = [
   "Computer Programming", 
@@ -139,18 +225,63 @@ export const SUBJECTS = [
   "Artificial Intelligence",
   "Operating Systems",
   "Computer Graphics",
+  
+  "Management Principles",
+  "Financial Accounting",
+  "Marketing Management",
+  "Organizational Behavior",
+  "Business Statistics",
+  "Business Law",
+  "Human Resource Management",
+  "Strategic Management",
+  "Entrepreneurship",
+  "International Business",
+  
+  "Introduction to IT",
+  "Business Mathematics",
+  "Database Management",
+  "System Analysis and Design",
+  "Web Technology",
+  "Business Intelligence",
+  "IT Project Management",
+  "E-Business",
+  "Knowledge Management",
+  "Information Security"
 ];
 
-// Enhanced mapping of subjects by semester (for a real app, this would come from the database)
-export const SUBJECTS_BY_SEMESTER = {
-  1: ["Computer Programming", "Digital Logic", "Mathematics I"],
-  2: ["Object-Oriented Programming", "Mathematics II", "Web Development"],
-  3: ["Data Structures and Algorithms", "Database Management Systems", "Software Engineering"],
-  4: ["Computer Networks", "Operating Systems", "Computer Architecture"],
-  5: ["Artificial Intelligence", "Mobile Application Development", "Computer Graphics"],
-  6: ["Web Development", "Machine Learning", "Data Science"],
-  7: ["Cloud Computing", "Big Data Analytics", "Information Security"],
-  8: ["Project Work", "Internship", "Emerging Technologies"]
+export const SUBJECTS_BY_FIELD_AND_SEMESTER = {
+  "BCA": {
+    1: ["Computer Programming", "Digital Logic", "Mathematics I"],
+    2: ["Object-Oriented Programming", "Mathematics II", "Web Development"],
+    3: ["Data Structures and Algorithms", "Database Management Systems", "Software Engineering"],
+    4: ["Computer Networks", "Operating Systems", "Computer Architecture"],
+    5: ["Artificial Intelligence", "Mobile Application Development", "Computer Graphics"],
+    6: ["Web Development", "Machine Learning", "Data Science"],
+    7: ["Cloud Computing", "Big Data Analytics", "Information Security"],
+    8: ["Project Work", "Internship", "Emerging Technologies"]
+  },
+  "BBA": {
+    1: ["Management Principles", "Financial Accounting", "Business Statistics"],
+    2: ["Marketing Management", "Organizational Behavior", "Business Law"],
+    3: ["Human Resource Management", "Corporate Finance", "Research Methods"],
+    4: ["Strategic Management", "Operations Management", "International Business"],
+    5: ["Entrepreneurship", "Business Ethics", "Marketing Research"],
+    6: ["Financial Management", "Supply Chain Management", "Digital Marketing"],
+    7: ["Project Management", "Investment Analysis", "Consumer Behavior"],
+    8: ["Business Policy", "Internship", "Capstone Project"]
+  },
+  "BIM": {
+    1: ["Introduction to IT", "Business Mathematics", "Principles of Management"],
+    2: ["Database Management", "Financial Accounting", "Web Technology"],
+    3: ["System Analysis and Design", "IT Project Management", "Business Communication"],
+    4: ["Business Intelligence", "E-Business", "Java Programming"],
+    5: ["Knowledge Management", "Information Security", "Data Warehouse"],
+    6: ["Enterprise Resource Planning", "Cybersecurity", "Mobile Application Development"],
+    7: ["Cloud Computing", "Digital Marketing", "IT Governance"],
+    8: ["Project Work", "Internship", "IT Strategy"]
+  }
 };
+
+export const SUBJECTS_BY_SEMESTER = SUBJECTS_BY_FIELD_AND_SEMESTER["BCA"];
 
 export const RESOURCE_TYPES = ["Notes", "Questions", "Syllabus"];

@@ -25,6 +25,7 @@ const ResourceTable = ({ resources, onEdit, onDelete }: ResourceTableProps) => {
         <TableHeader className="bg-gray-50">
           <TableRow>
             <TableHead className="font-semibold">Title</TableHead>
+            <TableHead className="font-semibold">Field</TableHead>
             <TableHead className="font-semibold">Type</TableHead>
             <TableHead className="font-semibold">Subject</TableHead>
             <TableHead className="font-semibold">Semester</TableHead>
@@ -36,6 +37,7 @@ const ResourceTable = ({ resources, onEdit, onDelete }: ResourceTableProps) => {
           {resources.map((resource) => (
             <TableRow key={resource.id} className="hover:bg-gray-50">
               <TableCell className="font-medium">{resource.title}</TableCell>
+              <TableCell>{resource.field || "BCA"}</TableCell>
               <TableCell>
                 <span className={`px-2.5 py-1 text-xs font-medium rounded-full 
                   ${resource.type === "Notes" ? "bg-primary/10 text-primary" : 

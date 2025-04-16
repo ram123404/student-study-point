@@ -49,6 +49,7 @@ const ResourceCard = ({ resource }: ResourceCardProps) => {
               <div>
                 <h3 className="font-semibold text-lg line-clamp-1">{resource.title}</h3>
                 <p className="text-gray-500 text-sm mt-1.5">
+                  {resource.field && <span className="font-medium">{resource.field} • </span>}
                   {resource.subject} • Semester {resource.semester}
                 </p>
               </div>
