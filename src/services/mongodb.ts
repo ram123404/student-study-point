@@ -1,3 +1,4 @@
+
 import { Resource } from '@/types/resource';
 import { supabase } from '@/lib/supabase';
 
@@ -30,7 +31,7 @@ export const getResources = async (): Promise<Resource[]> => {
   try {
     const { data, error } = await supabase
       .from('resources')
-      .select('*')
+      .select('*, fields:field_id(id, name)')
       .order('uploadDate', { ascending: false });
     
     if (error) {
@@ -42,7 +43,7 @@ export const getResources = async (): Promise<Resource[]> => {
     return data?.map(item => ({
       ...item,
       id: Number(item.id),
-      field: item.field || "BCA" // Default to BCA for existing resources
+      field: item.fields?.name || item.field || "BCA", // Use field name from the fields table or fallback
     })) || [];
   } catch (error) {
     console.error('Failed to fetch resources:', error);
@@ -54,7 +55,7 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
   try {
     const { data, error } = await supabase
       .from('resources')
-      .select('*')
+      .select('*, fields:field_id(id, name)')
       .eq('id', id.toString())
       .single();
     
@@ -67,7 +68,7 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
     return { 
       ...data, 
       id: Number(data.id),
-      field: data.field || "BCA" // Default to BCA for existing resources
+      field: data.fields?.name || data.field || "BCA", // Use field name from the fields table or fallback
     } as Resource;
   } catch (error) {
     console.error(`Failed to fetch resource with id ${id}:`, error);
@@ -77,12 +78,26 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
 
 export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate'>): Promise<Resource> => {
   try {
+    // Fetch the field_id from the fields table
+    let field_id = null;
+    if (resource.field) {
+      const { data: fieldData } = await supabase
+        .from('fields')
+        .select('id')
+        .eq('name', resource.field)
+        .single();
+        
+      if (fieldData) {
+        field_id = fieldData.id;
+      }
+    }
+    
     // Generate a unique ID and add upload date
     const newResource = {
       ...resource,
       id: Date.now().toString(),
       uploadDate: new Date().toISOString().split('T')[0],
-      field: resource.field || "BCA" // Ensure field is set
+      field_id: field_id
     };
     
     const { data, error } = await supabase
@@ -101,7 +116,7 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
       ...data, 
       id: Number(data.id),
       uploadDate: data.uploadDate || newResource.uploadDate,
-      field: data.field || newResource.field
+      field: resource.field // Preserve the field name
     } as Resource;
   } catch (error) {
     console.error('Failed to create resource:', error);
@@ -111,9 +126,27 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
 
 export const updateResource = async (id: number, updates: Partial<Resource>): Promise<Resource | null> => {
   try {
+    // Fetch the field_id from the fields table if field name is provided
+    let field_id = updates.field_id;
+    if (updates.field && !updates.field_id) {
+      const { data: fieldData } = await supabase
+        .from('fields')
+        .select('id')
+        .eq('name', updates.field)
+        .single();
+        
+      if (fieldData) {
+        field_id = fieldData.id;
+      }
+    }
+    
     const { data, error } = await supabase
       .from('resources')
-      .update({ ...updates, id: id.toString() })
+      .update({ 
+        ...updates, 
+        id: id.toString(),
+        field_id: field_id
+      })
       .eq('id', id.toString())
       .select()
       .single();
@@ -127,7 +160,7 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
     return { 
       ...data, 
       id: Number(data.id),
-      field: data.field || "BCA" // Default to BCA for existing resources
+      field: updates.field || data.field || "BCA" // Preserve the field name
     } as Resource;
   } catch (error) {
     console.error(`Failed to update resource with id ${id}:`, error);

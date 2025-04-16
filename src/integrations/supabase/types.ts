@@ -33,10 +33,29 @@ export type Database = {
         }
         Relationships: []
       }
+      fields: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           created_at: string
           description: string
+          field_id: string | null
           fileUrl: string
           id: string
           semester: number
@@ -48,6 +67,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
+          field_id?: string | null
           fileUrl: string
           id: string
           semester: number
@@ -59,6 +79,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          field_id?: string | null
           fileUrl?: string
           id?: string
           semester?: number
@@ -67,7 +88,47 @@ export type Database = {
           type?: string
           uploadDate?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resources_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "fields"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          created_at: string
+          field_id: string
+          id: string
+          name: string
+          semester: number
+        }
+        Insert: {
+          created_at?: string
+          field_id: string
+          id?: string
+          name: string
+          semester: number
+        }
+        Update: {
+          created_at?: string
+          field_id?: string
+          id?: string
+          name?: string
+          semester?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "fields"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

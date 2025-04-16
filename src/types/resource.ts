@@ -9,4 +9,5 @@ export interface Resource {
   uploadDate: string;
   fileUrl: string;
   field: string; // Field of study (BCA, BBA, BIM, etc.)
+  field_id?: string; // UUID reference to the fields table
 }

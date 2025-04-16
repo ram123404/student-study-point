@@ -68,7 +68,7 @@ const ResourceCard = ({ resource }: ResourceCardProps) => {
           <div className="mt-auto">
             <div className="text-xs text-gray-500 flex flex-wrap gap-x-2 gap-y-1">
               <span className="flex items-center">
-                {resource.field || "BCA"}
+                {resource.field}
               </span>
               <span>•</span>
               <span>
