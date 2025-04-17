@@ -14,7 +14,6 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [previewAvailable, setPreviewAvailable] = useState(true);
-  const [fileSize, setFileSize] = useState<string | null>(null);
   const [fileType, setFileType] = useState<string>('unknown');
   const MAX_PREVIEW_PAGES = 5;
 
@@ -34,33 +33,23 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
         if (url.endsWith('.pdf')) type = 'pdf';
         else if (url.endsWith('.docx') || url.endsWith('.doc')) type = 'doc';
         else if (url.endsWith('.ppt') || url.endsWith('.pptx')) type = 'ppt';
+        else if (url.endsWith('.txt')) type = 'txt';
         
         setFileType(type);
         
-        // For real remote URLs (not blob or placeholder), try to get more info
-        if (!isBlobUrl && !isPlaceholder) {
+        // Skip fetch for blob URLs as they can't be fetched with HEAD requests
+        if (!isBlobUrl && !isPlaceholder && !url.startsWith('data:')) {
           try {
+            // Only attempt to fetch for URLs that are not blob:, #, or data: URLs
             const response = await fetch(resource.fileUrl, { method: 'HEAD' });
-            const contentLength = response.headers.get('content-length');
             const contentType = response.headers.get('content-type');
-            
-            // Calculate file size
-            if (contentLength) {
-              const sizeInBytes = parseInt(contentLength, 10);
-              if (sizeInBytes < 1024) {
-                setFileSize(`${sizeInBytes} B`);
-              } else if (sizeInBytes < 1024 * 1024) {
-                setFileSize(`${(sizeInBytes / 1024).toFixed(1)} KB`);
-              } else {
-                setFileSize(`${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`);
-              }
-            }
             
             // Update file type based on content type if available
             if (contentType) {
               if (contentType.includes('pdf')) type = 'pdf';
               else if (contentType.includes('word') || contentType.includes('docx')) type = 'doc';
               else if (contentType.includes('powerpoint') || contentType.includes('pptx')) type = 'ppt';
+              else if (contentType.includes('text')) type = 'txt';
               
               setFileType(type);
             }
@@ -68,9 +57,6 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
             console.error('Error fetching remote file details:', error);
             // Continue with the type determined from the URL
           }
-        } else {
-          // For blob URLs or placeholder URLs
-          setFileSize(isBlobUrl ? 'Generated file' : 'Unknown');
         }
         
         // Determine if preview is available
@@ -80,6 +66,9 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
           // For PDF files, we can try to show a preview
           setTotalPages(Math.min(MAX_PREVIEW_PAGES, 5)); // Default to 5 pages or max preview pages
           setPreviewAvailable(!isBlobUrl); // Only if not a blob URL
+        } else if (type === 'txt') {
+          setTotalPages(1);
+          setPreviewAvailable(true);
         } else {
           setTotalPages(1);
           setPreviewAvailable(type !== 'unknown');
@@ -152,12 +141,20 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
     } else if (fileType === 'doc') {
       return (
         <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <p className="mb-4">Preview for Word documents is limited. Please download for best experience.</p>
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm max-w-xl">
+            <h3 className="text-xl font-semibold mb-4">{resource.title}</h3>
+            <p className="mb-6 text-gray-600">{resource.description}</p>
+            <div className="mb-6">
+              <p className="font-medium">Document Information:</p>
+              <p>Type: Word Document</p>
+              <p>Subject: {resource.subject}</p>
+              <p>Semester: {resource.semester}</p>
+            </div>
+            <p className="mb-4 text-amber-600">Preview for Word documents is limited. Please download for best experience.</p>
             <img 
               src="/placeholder.svg" 
               alt="Document preview" 
-              className="w-1/2 mx-auto mb-4 opacity-50"
+              className="w-1/3 mx-auto mb-4 opacity-50"
             />
           </div>
         </div>
@@ -165,25 +162,57 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
     } else if (fileType === 'ppt') {
       return (
         <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <p className="mb-4">Preview for PowerPoint presentations is limited. Please download for best experience.</p>
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm max-w-xl">
+            <h3 className="text-xl font-semibold mb-4">{resource.title}</h3>
+            <p className="mb-6 text-gray-600">{resource.description}</p>
+            <div className="mb-6">
+              <p className="font-medium">Presentation Information:</p>
+              <p>Type: PowerPoint Presentation</p>
+              <p>Subject: {resource.subject}</p>
+              <p>Semester: {resource.semester}</p>
+            </div>
+            <p className="mb-4 text-amber-600">Preview for PowerPoint presentations is limited. Please download for best experience.</p>
             <img 
               src="/placeholder.svg" 
               alt="Presentation preview" 
-              className="w-1/2 mx-auto mb-4 opacity-50"
+              className="w-1/3 mx-auto mb-4 opacity-50"
             />
+          </div>
+        </div>
+      );
+    } else if (fileType === 'txt') {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm max-w-xl">
+            <h3 className="text-xl font-semibold mb-4">{resource.title}</h3>
+            <p className="mb-6 text-gray-600">{resource.description}</p>
+            <div className="mb-6">
+              <p className="font-medium">Text Document Information:</p>
+              <p>Type: Text File</p>
+              <p>Subject: {resource.subject}</p>
+              <p>Semester: {resource.semester}</p>
+            </div>
+            <p className="mb-4">Plain text content is available after download.</p>
           </div>
         </div>
       );
     } else {
       return (
         <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <p>Preview not available for this file type.</p>
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm max-w-xl">
+            <h3 className="text-xl font-semibold mb-4">{resource.title}</h3>
+            <p className="mb-6 text-gray-600">{resource.description}</p>
+            <div className="mb-6">
+              <p className="font-medium">File Information:</p>
+              <p>Type: {resource.type}</p>
+              <p>Subject: {resource.subject}</p>
+              <p>Semester: {resource.semester}</p>
+            </div>
+            <p className="mb-4 text-amber-600">Preview not available for this file type.</p>
             <img 
               src="/placeholder.svg" 
               alt="No preview" 
-              className="w-1/2 mx-auto my-4 opacity-50"
+              className="w-1/3 mx-auto mb-4 opacity-50"
             />
           </div>
         </div>

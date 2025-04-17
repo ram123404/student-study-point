@@ -15,12 +15,6 @@ const ResourceDetail = () => {
   const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
-  const [fileInfo, setFileInfo] = useState({
-    format: 'Unknown',
-    size: 'Unknown',
-    pages: 'Unknown',
-    language: 'English'
-  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,86 +25,6 @@ const ResourceDetail = () => {
           const foundResource = await getResourceById(Number(id));
           console.log('Found resource:', foundResource);
           setResource(foundResource);
-          
-          // Determine file info based on fileUrl without fetching
-          if (foundResource?.fileUrl) {
-            try {
-              // Check if URL is a blob URL (which we can't fetch directly)
-              const isBlobUrl = foundResource.fileUrl.startsWith('blob:');
-              
-              // Set file format based on URL extension or type
-              let format = 'Unknown';
-              const fileUrl = foundResource.fileUrl.toLowerCase();
-              
-              if (fileUrl.endsWith('.pdf')) format = 'PDF';
-              else if (fileUrl.endsWith('.docx') || fileUrl.endsWith('.doc')) format = 'Word Document';
-              else if (fileUrl.endsWith('.ppt') || fileUrl.endsWith('.pptx')) format = 'PowerPoint';
-              else if (fileUrl.endsWith('.txt')) format = 'Text';
-              else if (fileUrl === '#') format = 'Sample Document';
-              
-              // For non-blob URLs, try to get more info if possible
-              if (!isBlobUrl && foundResource.fileUrl !== '#') {
-                try {
-                  const response = await fetch(foundResource.fileUrl, { method: 'HEAD' });
-                  const contentLength = response.headers.get('content-length');
-                  const contentType = response.headers.get('content-type');
-                  
-                  // Calculate file size
-                  let sizeText = 'Unknown';
-                  if (contentLength) {
-                    const sizeInBytes = parseInt(contentLength, 10);
-                    if (sizeInBytes < 1024) {
-                      sizeText = `${sizeInBytes} B`;
-                    } else if (sizeInBytes < 1024 * 1024) {
-                      sizeText = `${(sizeInBytes / 1024).toFixed(1)} KB`;
-                    } else {
-                      sizeText = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
-                    }
-                  }
-                  
-                  // Update format if we have content type
-                  if (contentType) {
-                    if (contentType.includes('pdf')) {
-                      format = 'PDF';
-                    } else if (contentType.includes('word') || contentType.includes('docx')) {
-                      format = 'Word Document';
-                    } else if (contentType.includes('powerpoint') || contentType.includes('pptx')) {
-                      format = 'PowerPoint';
-                    } else if (contentType.includes('text')) {
-                      format = 'Text';
-                    }
-                  }
-                  
-                  setFileInfo({
-                    format: format,
-                    size: sizeText,
-                    pages: format === 'PDF' ? 'Multiple' : 'N/A',
-                    language: 'English'
-                  });
-                } catch (error) {
-                  console.error('Error fetching remote file info:', error);
-                  // Continue with the default file info below
-                }
-              } else {
-                // For blob URLs or placeholder URLs, use inferred information
-                setFileInfo({
-                  format: format,
-                  size: isBlobUrl ? 'Generated file' : 'Unknown',
-                  pages: format === 'PDF' ? 'Multiple' : 'N/A',
-                  language: 'English'
-                });
-              }
-            } catch (error) {
-              console.error('Error determining file info:', error);
-              // Use default file info
-              setFileInfo({
-                format: 'Unknown',
-                size: 'Unknown',
-                pages: 'Unknown',
-                language: 'English'
-              });
-            }
-          }
         }
       } catch (error) {
         console.error('Error fetching resource:', error);
@@ -245,17 +159,6 @@ const ResourceDetail = () => {
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Description</h2>
             <p className="text-gray-700">{resource.description}</p>
-          </div>
-          
-          {/* Additional Information (dynamic based on resource) */}
-          <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-            <h2 className="text-lg font-semibold mb-2">Additional Information</h2>
-            <ul className="list-disc list-inside text-gray-700">
-              <li>Format: {fileInfo.format}</li>
-              <li>Size: {fileInfo.size}</li>
-              <li>Pages: {fileInfo.pages}</li>
-              <li>Language: {fileInfo.language}</li>
-            </ul>
           </div>
           
           {/* Download Section */}
