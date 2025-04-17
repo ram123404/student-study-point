@@ -55,6 +55,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          field: string | null
           field_id: string | null
           fileUrl: string
           id: string
@@ -67,6 +68,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
+          field?: string | null
           field_id?: string | null
           fileUrl: string
           id: string
@@ -79,6 +81,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          field?: string | null
           field_id?: string | null
           fileUrl?: string
           id?: string

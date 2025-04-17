@@ -1,4 +1,3 @@
-
 import { Resource } from '@/types/resource';
 import { supabase } from '@/lib/supabase';
 
@@ -43,7 +42,7 @@ export const getResources = async (): Promise<Resource[]> => {
     return data?.map(item => ({
       ...item,
       id: Number(item.id),
-      field: item.fields?.name || item.field || "BCA", // Use field name from the fields table or fallback
+      field: item.fields?.name || item.field || "BCA", // Use field name from the fields table or fallback to the field column
     })) || [];
   } catch (error) {
     console.error('Failed to fetch resources:', error);
@@ -68,7 +67,7 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
     return { 
       ...data, 
       id: Number(data.id),
-      field: data.fields?.name || data.field || "BCA", // Use field name from the fields table or fallback
+      field: data.fields?.name || data.field || "BCA", // Use field name from the fields table or fallback to the field column
     } as Resource;
   } catch (error) {
     console.error(`Failed to fetch resource with id ${id}:`, error);
@@ -140,13 +139,21 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
       }
     }
     
+    // Create an update object without the field property (we'll use field_id instead)
+    const updateData = {
+      ...updates,
+      id: id.toString(),
+      field_id: field_id,
+    };
+    
+    // If field was in the updates, ensure it's stored in the field column too
+    if (updates.field) {
+      updateData.field = updates.field;
+    }
+    
     const { data, error } = await supabase
       .from('resources')
-      .update({ 
-        ...updates, 
-        id: id.toString(),
-        field_id: field_id
-      })
+      .update(updateData)
       .eq('id', id.toString())
       .select()
       .single();
@@ -164,7 +171,7 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
     } as Resource;
   } catch (error) {
     console.error(`Failed to update resource with id ${id}:`, error);
-    throw error;
+    return null;
   }
 };
 
