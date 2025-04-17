@@ -15,6 +15,12 @@ const ResourceDetail = () => {
   const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+  const [fileInfo, setFileInfo] = useState({
+    format: 'PDF',
+    size: '0 KB',
+    pages: 'Unknown',
+    language: 'English'
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -25,6 +31,59 @@ const ResourceDetail = () => {
           const foundResource = await getResourceById(Number(id));
           console.log('Found resource:', foundResource);
           setResource(foundResource);
+          
+          // Get file information
+          if (foundResource?.fileUrl) {
+            try {
+              const response = await fetch(foundResource.fileUrl, { method: 'HEAD' });
+              const contentLength = response.headers.get('content-length');
+              const contentType = response.headers.get('content-type');
+              
+              // Calculate file size
+              let sizeText = 'Unknown';
+              if (contentLength) {
+                const sizeInBytes = parseInt(contentLength, 10);
+                if (sizeInBytes < 1024) {
+                  sizeText = `${sizeInBytes} B`;
+                } else if (sizeInBytes < 1024 * 1024) {
+                  sizeText = `${(sizeInBytes / 1024).toFixed(1)} KB`;
+                } else {
+                  sizeText = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+                }
+              }
+              
+              // Determine format from content type or file extension
+              let format = 'Unknown';
+              if (contentType) {
+                if (contentType.includes('pdf')) {
+                  format = 'PDF';
+                } else if (contentType.includes('word') || contentType.includes('docx')) {
+                  format = 'Word Document';
+                } else if (contentType.includes('powerpoint') || contentType.includes('pptx')) {
+                  format = 'PowerPoint';
+                } else if (contentType.includes('text')) {
+                  format = 'Text';
+                }
+              } else {
+                // Fallback to file extension
+                const fileUrl = foundResource.fileUrl.toLowerCase();
+                if (fileUrl.endsWith('.pdf')) format = 'PDF';
+                else if (fileUrl.endsWith('.docx') || fileUrl.endsWith('.doc')) format = 'Word Document';
+                else if (fileUrl.endsWith('.ppt') || fileUrl.endsWith('.pptx')) format = 'PowerPoint';
+                else if (fileUrl.endsWith('.txt')) format = 'Text';
+              }
+              
+              // Update file info
+              setFileInfo({
+                format: format,
+                size: sizeText,
+                pages: format === 'PDF' ? 'Multiple' : 'N/A',
+                language: 'English' // Default language
+              });
+            } catch (error) {
+              console.error('Error fetching file info:', error);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching resource:', error);
@@ -161,14 +220,14 @@ const ResourceDetail = () => {
             <p className="text-gray-700">{resource.description}</p>
           </div>
           
-          {/* Additional Information (can be expanded) */}
+          {/* Additional Information (dynamic based on resource) */}
           <div className="mb-8 p-4 bg-gray-50 rounded-lg">
             <h2 className="text-lg font-semibold mb-2">Additional Information</h2>
             <ul className="list-disc list-inside text-gray-700">
-              <li>Format: PDF</li>
-              <li>Size: 2.4 MB</li>
-              <li>Pages: 45</li>
-              <li>Language: English</li>
+              <li>Format: {fileInfo.format}</li>
+              <li>Size: {fileInfo.size}</li>
+              <li>Pages: {fileInfo.pages}</li>
+              <li>Language: {fileInfo.language}</li>
             </ul>
           </div>
           
