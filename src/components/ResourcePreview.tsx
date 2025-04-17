@@ -14,39 +14,77 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [previewAvailable, setPreviewAvailable] = useState(true);
-  const [fileSize, setFileSize] = useState<number | null>(null);
+  const [fileSize, setFileSize] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<string>('unknown');
   const MAX_PREVIEW_PAGES = 5;
-  const MAX_FILE_SIZE_MB = 5;
 
   useEffect(() => {
     const checkFileDetails = async () => {
       try {
         setIsLoading(true);
         
-        // Check file size
-        const response = await fetch(resource.fileUrl, { method: 'HEAD' });
-        const contentLength = response.headers.get('content-length');
-        const size = contentLength ? parseInt(contentLength, 10) / (1024 * 1024) : null;
-        setFileSize(size);
+        // Check if URL is a blob URL or placeholder
+        const isBlobUrl = resource.fileUrl.startsWith('blob:');
+        const isPlaceholder = resource.fileUrl === '#';
         
-        // Determine if preview is available based on file size
-        if (size && size > MAX_FILE_SIZE_MB) {
-          setPreviewAvailable(false);
-          setIsLoading(false);
-          return;
+        // Determine file type from extension
+        const url = resource.fileUrl.toLowerCase();
+        let type = 'unknown';
+        
+        if (url.endsWith('.pdf')) type = 'pdf';
+        else if (url.endsWith('.docx') || url.endsWith('.doc')) type = 'doc';
+        else if (url.endsWith('.ppt') || url.endsWith('.pptx')) type = 'ppt';
+        
+        setFileType(type);
+        
+        // For real remote URLs (not blob or placeholder), try to get more info
+        if (!isBlobUrl && !isPlaceholder) {
+          try {
+            const response = await fetch(resource.fileUrl, { method: 'HEAD' });
+            const contentLength = response.headers.get('content-length');
+            const contentType = response.headers.get('content-type');
+            
+            // Calculate file size
+            if (contentLength) {
+              const sizeInBytes = parseInt(contentLength, 10);
+              if (sizeInBytes < 1024) {
+                setFileSize(`${sizeInBytes} B`);
+              } else if (sizeInBytes < 1024 * 1024) {
+                setFileSize(`${(sizeInBytes / 1024).toFixed(1)} KB`);
+              } else {
+                setFileSize(`${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`);
+              }
+            }
+            
+            // Update file type based on content type if available
+            if (contentType) {
+              if (contentType.includes('pdf')) type = 'pdf';
+              else if (contentType.includes('word') || contentType.includes('docx')) type = 'doc';
+              else if (contentType.includes('powerpoint') || contentType.includes('pptx')) type = 'ppt';
+              
+              setFileType(type);
+            }
+          } catch (error) {
+            console.error('Error fetching remote file details:', error);
+            // Continue with the type determined from the URL
+          }
+        } else {
+          // For blob URLs or placeholder URLs
+          setFileSize(isBlobUrl ? 'Generated file' : 'Unknown');
         }
         
-        // For PDF files, we can try to estimate page count
-        const fileType = getFileType();
-        if (fileType === 'pdf') {
-          // For simplicity, we'll set a default page count
-          // In a real-world scenario, you might want to use a PDF.js library to get the actual page count
+        // Determine if preview is available
+        if (isPlaceholder) {
+          setPreviewAvailable(false);
+        } else if (type === 'pdf') {
+          // For PDF files, we can try to show a preview
           setTotalPages(Math.min(MAX_PREVIEW_PAGES, 5)); // Default to 5 pages or max preview pages
+          setPreviewAvailable(!isBlobUrl); // Only if not a blob URL
         } else {
           setTotalPages(1);
+          setPreviewAvailable(type !== 'unknown');
         }
         
-        setPreviewAvailable(true);
         setIsLoading(false);
       } catch (error) {
         console.error("Error checking file details:", error);
@@ -70,17 +108,6 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
     }
   };
 
-  // Determine file type to render appropriate preview
-  const getFileType = () => {
-    const fileUrl = resource.fileUrl.toLowerCase();
-    if (fileUrl.endsWith('.pdf')) return 'pdf';
-    if (fileUrl.endsWith('.docx') || fileUrl.endsWith('.doc')) return 'doc';
-    if (fileUrl.endsWith('.ppt') || fileUrl.endsWith('.pptx')) return 'ppt';
-    return 'unknown';
-  };
-
-  const fileType = getFileType();
-
   const renderPreviewContent = () => {
     if (isLoading) {
       return (
@@ -97,11 +124,13 @@ const ResourcePreview = ({ resource, onClose }: ResourcePreviewProps) => {
           <FileX className="h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium mb-2">Preview not available</h3>
           <p className="text-gray-600 mb-4 max-w-md">
-            {fileSize ? 
-              `This file is too large (${fileSize.toFixed(1)} MB) for online preview.` : 
-              'This file exceeds the maximum size or page count for online preview.'}
+            {resource.fileUrl.startsWith('blob:') ? 
+              'Preview is not available for locally generated files.' :
+              resource.fileUrl === '#' ?
+              'This is a sample resource with no actual file attached.' :
+              'This file type is not supported for online preview.'}
           </p>
-          <p className="text-gray-600 mb-6">Please download to view the full content.</p>
+          <p className="text-gray-600 mb-6">Please download to view the content.</p>
           <Button asChild variant="default">
             <a href={resource.fileUrl} download>
               <Download className="mr-2 h-4 w-4" />

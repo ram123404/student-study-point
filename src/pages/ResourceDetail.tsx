@@ -16,8 +16,8 @@ const ResourceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const [fileInfo, setFileInfo] = useState({
-    format: 'PDF',
-    size: '0 KB',
+    format: 'Unknown',
+    size: 'Unknown',
     pages: 'Unknown',
     language: 'English'
   });
@@ -32,56 +32,83 @@ const ResourceDetail = () => {
           console.log('Found resource:', foundResource);
           setResource(foundResource);
           
-          // Get file information
+          // Determine file info based on fileUrl without fetching
           if (foundResource?.fileUrl) {
             try {
-              const response = await fetch(foundResource.fileUrl, { method: 'HEAD' });
-              const contentLength = response.headers.get('content-length');
-              const contentType = response.headers.get('content-type');
+              // Check if URL is a blob URL (which we can't fetch directly)
+              const isBlobUrl = foundResource.fileUrl.startsWith('blob:');
               
-              // Calculate file size
-              let sizeText = 'Unknown';
-              if (contentLength) {
-                const sizeInBytes = parseInt(contentLength, 10);
-                if (sizeInBytes < 1024) {
-                  sizeText = `${sizeInBytes} B`;
-                } else if (sizeInBytes < 1024 * 1024) {
-                  sizeText = `${(sizeInBytes / 1024).toFixed(1)} KB`;
-                } else {
-                  sizeText = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
-                }
-              }
-              
-              // Determine format from content type or file extension
+              // Set file format based on URL extension or type
               let format = 'Unknown';
-              if (contentType) {
-                if (contentType.includes('pdf')) {
-                  format = 'PDF';
-                } else if (contentType.includes('word') || contentType.includes('docx')) {
-                  format = 'Word Document';
-                } else if (contentType.includes('powerpoint') || contentType.includes('pptx')) {
-                  format = 'PowerPoint';
-                } else if (contentType.includes('text')) {
-                  format = 'Text';
+              const fileUrl = foundResource.fileUrl.toLowerCase();
+              
+              if (fileUrl.endsWith('.pdf')) format = 'PDF';
+              else if (fileUrl.endsWith('.docx') || fileUrl.endsWith('.doc')) format = 'Word Document';
+              else if (fileUrl.endsWith('.ppt') || fileUrl.endsWith('.pptx')) format = 'PowerPoint';
+              else if (fileUrl.endsWith('.txt')) format = 'Text';
+              else if (fileUrl === '#') format = 'Sample Document';
+              
+              // For non-blob URLs, try to get more info if possible
+              if (!isBlobUrl && foundResource.fileUrl !== '#') {
+                try {
+                  const response = await fetch(foundResource.fileUrl, { method: 'HEAD' });
+                  const contentLength = response.headers.get('content-length');
+                  const contentType = response.headers.get('content-type');
+                  
+                  // Calculate file size
+                  let sizeText = 'Unknown';
+                  if (contentLength) {
+                    const sizeInBytes = parseInt(contentLength, 10);
+                    if (sizeInBytes < 1024) {
+                      sizeText = `${sizeInBytes} B`;
+                    } else if (sizeInBytes < 1024 * 1024) {
+                      sizeText = `${(sizeInBytes / 1024).toFixed(1)} KB`;
+                    } else {
+                      sizeText = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+                    }
+                  }
+                  
+                  // Update format if we have content type
+                  if (contentType) {
+                    if (contentType.includes('pdf')) {
+                      format = 'PDF';
+                    } else if (contentType.includes('word') || contentType.includes('docx')) {
+                      format = 'Word Document';
+                    } else if (contentType.includes('powerpoint') || contentType.includes('pptx')) {
+                      format = 'PowerPoint';
+                    } else if (contentType.includes('text')) {
+                      format = 'Text';
+                    }
+                  }
+                  
+                  setFileInfo({
+                    format: format,
+                    size: sizeText,
+                    pages: format === 'PDF' ? 'Multiple' : 'N/A',
+                    language: 'English'
+                  });
+                } catch (error) {
+                  console.error('Error fetching remote file info:', error);
+                  // Continue with the default file info below
                 }
               } else {
-                // Fallback to file extension
-                const fileUrl = foundResource.fileUrl.toLowerCase();
-                if (fileUrl.endsWith('.pdf')) format = 'PDF';
-                else if (fileUrl.endsWith('.docx') || fileUrl.endsWith('.doc')) format = 'Word Document';
-                else if (fileUrl.endsWith('.ppt') || fileUrl.endsWith('.pptx')) format = 'PowerPoint';
-                else if (fileUrl.endsWith('.txt')) format = 'Text';
+                // For blob URLs or placeholder URLs, use inferred information
+                setFileInfo({
+                  format: format,
+                  size: isBlobUrl ? 'Generated file' : 'Unknown',
+                  pages: format === 'PDF' ? 'Multiple' : 'N/A',
+                  language: 'English'
+                });
               }
-              
-              // Update file info
-              setFileInfo({
-                format: format,
-                size: sizeText,
-                pages: format === 'PDF' ? 'Multiple' : 'N/A',
-                language: 'English' // Default language
-              });
             } catch (error) {
-              console.error('Error fetching file info:', error);
+              console.error('Error determining file info:', error);
+              // Use default file info
+              setFileInfo({
+                format: 'Unknown',
+                size: 'Unknown',
+                pages: 'Unknown',
+                language: 'English'
+              });
             }
           }
         }
