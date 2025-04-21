@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, X } from 'lucide-react';
-import { RESOURCE_TYPES, SUBJECTS, SEMESTERS, FIELDS_OF_STUDY, SUBJECTS_BY_FIELD_AND_SEMESTER } from "@/data/mockData";
 import { Resource } from "@/types/resource";
+import { supabase } from "@/lib/supabase";
 
 interface ResourceFormProps {
   resource?: Resource;
@@ -16,68 +16,79 @@ interface ResourceFormProps {
   submitLabel: string;
 }
 
-const ResourceForm = ({ 
-  resource, 
-  onSubmit, 
-  onCancel, 
-  onChange, 
+const SEMESTERS = Array.from({ length: 8 }, (_, i) => i + 1);
+const RESOURCE_TYPES = ["Notes", "Questions", "Syllabus"];
+
+const ResourceForm = ({
+  resource,
+  onSubmit,
+  onCancel,
+  onChange,
   formTitle,
   submitLabel
 }: ResourceFormProps) => {
-  // Get current values or default values
   const [formValues, setFormValues] = useState({
     title: resource?.title || '',
     description: resource?.description || '',
     type: resource?.type || RESOURCE_TYPES[0],
-    subject: resource?.subject || SUBJECTS[0],
+    subject: resource?.subject || '',
     semester: resource?.semester || SEMESTERS[0],
     fileUrl: resource?.fileUrl || '#',
-    field: resource?.field || FIELDS_OF_STUDY[0]
+    field: resource?.field || '',
+    field_id: resource?.field_id || ''
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [availableSubjects, setAvailableSubjects] = useState<string[]>(SUBJECTS);
 
-  // Update available subjects when field and semester change
+  const [fields, setFields] = useState<{ id: string; name: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string; field_id: string; semester: number }[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<{ id: string; name: string }[]>([]);
+
   useEffect(() => {
-    if (formValues.field && formValues.semester) {
-      const fieldSubjects = SUBJECTS_BY_FIELD_AND_SEMESTER[formValues.field as keyof typeof SUBJECTS_BY_FIELD_AND_SEMESTER];
-      if (fieldSubjects) {
-        const semesterSubjects = fieldSubjects[formValues.semester as keyof typeof fieldSubjects];
-        setAvailableSubjects(semesterSubjects || SUBJECTS);
-        
-        // If current subject is not in the new subjects list, reset it
-        if (semesterSubjects && !semesterSubjects.includes(formValues.subject)) {
-          handleInputChange('subject', semesterSubjects[0] || '');
-        }
-      } else {
-        setAvailableSubjects(SUBJECTS);
+    supabase.from("fields").select("*").order("name").then(({ data }) => {
+      setFields(data || []);
+      // If no initial value, set default
+      if (!formValues.field && data && data[0]) {
+        handleInputChange('field', data[0].name);
+        handleInputChange('field_id', data[0].id);
       }
-    } else {
-      setAvailableSubjects(SUBJECTS);
+    });
+    supabase.from("subjects").select("*").then(({ data }) => {
+      setSubjects(data || []);
+    });
+    // eslint-disable-next-line
+  }, []);
+
+  // Update available subjects when field/semester change
+  useEffect(() => {
+    const selectedField = fields.find(f => f.name === formValues.field);
+    let filtered = subjects;
+    if (selectedField) {
+      filtered = filtered.filter(sub => sub.field_id === selectedField.id);
     }
-  }, [formValues.field, formValues.semester]);
+    if (formValues.semester) {
+      filtered = filtered.filter(sub => sub.semester === formValues.semester);
+    }
+    setAvailableSubjects(filtered.map(s => ({ id: s.id, name: s.name })));
+    if (formValues.subject && filtered.every(sub => sub.name !== formValues.subject)) {
+      handleInputChange('subject', filtered[0]?.name || '');
+    }
+    // eslint-disable-next-line
+  }, [formValues.field, formValues.semester, subjects, fields]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      // Just for the demo, we'll create a fake URL - in real app this would be handled by MongoDB
       handleInputChange('fileUrl', URL.createObjectURL(file));
     }
   };
 
-  // Handle all input changes
   const handleInputChange = (name: string, value: any) => {
-    console.log(`Changing form field ${name} to:`, value);
-    
-    // Update local state
     setFormValues(prev => ({
       ...prev,
       [name]: value
     }));
-    
-    // Notify parent component
     onChange(name, value);
   };
 
@@ -86,17 +97,16 @@ const ResourceForm = ({
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 overflow-y-auto max-h-[90vh]">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold">{formTitle}</h3>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0" 
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
             onClick={onCancel}
             type="button"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="space-y-4">
             <div>
@@ -110,7 +120,6 @@ const ResourceForm = ({
                 placeholder="Enter resource title"
               />
             </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Description
@@ -123,7 +132,6 @@ const ResourceForm = ({
                 placeholder="Enter resource description"
               />
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -132,15 +140,18 @@ const ResourceForm = ({
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                   value={formValues.field}
-                  onChange={(e) => handleInputChange('field', e.target.value)}
+                  onChange={(e) => {
+                    handleInputChange('field', e.target.value);
+                    const selected = fields.find(f => f.name === e.target.value);
+                    if (selected) handleInputChange('field_id', selected.id);
+                  }}
                   required
                 >
-                  {FIELDS_OF_STUDY.map((field) => (
-                    <option key={field} value={field}>{field}</option>
+                  {fields.map((field) => (
+                    <option key={field.id} value={field.name}>{field.name}</option>
                   ))}
                 </select>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Type
@@ -157,7 +168,6 @@ const ResourceForm = ({
                 </select>
               </div>
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -174,7 +184,6 @@ const ResourceForm = ({
                   ))}
                 </select>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Subject
@@ -186,12 +195,11 @@ const ResourceForm = ({
                   required
                 >
                   {availableSubjects.map((subject) => (
-                    <option key={subject} value={subject}>{subject}</option>
+                    <option key={subject.id} value={subject.name}>{subject.name}</option>
                   ))}
                 </select>
               </div>
             </div>
-            
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mt-4">
               <Upload className="mx-auto h-8 w-8 text-gray-400" />
               <p className="mt-2 text-sm text-gray-500">
@@ -200,17 +208,17 @@ const ResourceForm = ({
               <p className="text-xs text-gray-400">
                 PDF, DOCX, PPT up to 10MB
               </p>
-              <input 
-                type="file" 
-                className="hidden" 
+              <input
+                type="file"
+                className="hidden"
                 id="file-upload"
                 accept=".pdf,.docx,.ppt,.pptx"
                 onChange={handleFileChange}
               />
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 className="mt-4"
                 onClick={() => document.getElementById('file-upload')?.click()}
               >
@@ -218,10 +226,9 @@ const ResourceForm = ({
               </Button>
             </div>
           </div>
-          
           <div className="mt-6 flex justify-end space-x-3">
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               variant="outline"
               onClick={onCancel}
             >

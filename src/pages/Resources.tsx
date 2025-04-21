@@ -1,11 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ResourceCard from "@/components/ResourceCard";
-import { SEMESTERS, SUBJECTS, RESOURCE_TYPES, FIELDS_OF_STUDY, SUBJECTS_BY_FIELD_AND_SEMESTER } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -19,33 +19,10 @@ import { getResources } from "@/services/mongodb";
 import { Resource } from "@/types/resource";
 import { useToast } from "@/components/ui/use-toast";
 import { useMongoDBContext } from "@/contexts/MongoDBContext";
+import { supabase } from "@/lib/supabase";
 
-const getSubjectsByFieldAndSemester = (field, semesterValue) => {
-  if (!field && !semesterValue) return SUBJECTS;
-  
-  if (field && !semesterValue) {
-    // Return all subjects for the selected field
-    const fieldSubjects = [];
-    const semesterMapping = SUBJECTS_BY_FIELD_AND_SEMESTER[field];
-    if (semesterMapping) {
-      for (const semester in semesterMapping) {
-        fieldSubjects.push(...semesterMapping[semester]);
-      }
-      return [...new Set(fieldSubjects)]; // Remove duplicates
-    }
-    return SUBJECTS;
-  }
-  
-  if (!field && semesterValue) {
-    // Return default semester mapping (BCA)
-    const semesterNum = parseInt(semesterValue);
-    return SUBJECTS_BY_FIELD_AND_SEMESTER["BCA"][semesterNum] || SUBJECTS;
-  }
-  
-  // Both field and semester are provided
-  const semesterNum = parseInt(semesterValue);
-  return SUBJECTS_BY_FIELD_AND_SEMESTER[field]?.[semesterNum] || SUBJECTS;
-};
+const SEMESTERS = Array.from({ length: 8 }, (_, i) => i + 1);
+const RESOURCE_TYPES = ["Notes", "Questions", "Syllabus"];
 
 const Resources = () => {
   const { toast } = useToast();
@@ -59,13 +36,59 @@ const Resources = () => {
     searchQuery: "",
     field: "",
   });
-  const [availableSubjects, setAvailableSubjects] = useState(SUBJECTS);
+  const [fields, setFields] = useState<{ id: string; name: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string; field_id: string; semester: number }[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<{ id: string; name: string }[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const resourcesPerPage = 20;
 
+  // Fetch fields from DB
+  useEffect(() => {
+    const fetchFields = async () => {
+      const { data, error } = await supabase.from("fields").select("*").order("name");
+      if (!error && data) {
+        setFields(data);
+      }
+    };
+    fetchFields();
+  }, []);
+
+  // Fetch subjects from DB
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const { data, error } = await supabase.from("subjects").select("*");
+      if (!error && data) {
+        setSubjects(data);
+      }
+    };
+    fetchSubjects();
+  }, [fields]); // re-fetch if fields change
+
+  // Set available subjects based on field and semester filter
+  useEffect(() => {
+    let filtered = subjects;
+    if (filters.field) {
+      filtered = filtered.filter(s => s.field_id === filters.field);
+    }
+    if (filters.semester) {
+      filtered = filtered.filter(s => s.semester === parseInt(filters.semester));
+    }
+    setAvailableSubjects(
+      filtered
+        .map(({ id, name }) => ({ id, name }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    );
+
+    // Autofix filter if current subject is not in filtered subjects anymore
+    if (filters.subject && filtered.every(subj => subj.name !== filters.subject)) {
+      setFilters(prev => ({ ...prev, subject: "" }));
+    }
+  }, [filters.field, filters.semester, subjects]);
+
+  // Fetch resources
   useEffect(() => {
     const fetchResources = async () => {
       try {
@@ -84,28 +107,21 @@ const Resources = () => {
         setIsLoading(false);
       }
     };
-
     fetchResources();
   }, [toast]);
 
-  useEffect(() => {
-    setAvailableSubjects(getSubjectsByFieldAndSemester(filters.field, filters.semester));
-    
-    if ((filters.field || filters.semester) && filters.subject) {
-      const newSubjects = getSubjectsByFieldAndSemester(filters.field, filters.semester);
-      if (!newSubjects.includes(filters.subject)) {
-        setFilters(prev => ({...prev, subject: ""}));
-      }
-    }
-  }, [filters.semester, filters.field]);
-
+  // Apply filters
   useEffect(() => {
     let filteredResults = [...allResources];
 
     if (filters.field) {
-      filteredResults = filteredResults.filter(
-        (resource) => resource.field === filters.field
-      );
+      // Match against field name (not id)
+      const fieldObj = fields.find(f => f.id === filters.field);
+      if (fieldObj) {
+        filteredResults = filteredResults.filter(
+          (resource) => resource.field === fieldObj.name
+        );
+      }
     }
 
     if (filters.semester) {
@@ -137,7 +153,7 @@ const Resources = () => {
 
     setResources(filteredResults);
     setCurrentPage(1);
-  }, [filters, allResources]);
+  }, [filters, allResources, fields]);
 
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({
@@ -197,7 +213,6 @@ const Resources = () => {
         pages.push(totalPages);
       }
     }
-
     return pages;
   };
 
@@ -234,9 +249,9 @@ const Resources = () => {
               <Button variant="outline" onClick={clearFilters} size="sm">
                 Clear Filters
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={toggleFilters} 
+              <Button
+                variant="outline"
+                onClick={toggleFilters}
                 className="md:hidden"
                 size="sm"
               >
@@ -257,12 +272,12 @@ const Resources = () => {
                 onChange={(e) => handleFilterChange("field", e.target.value)}
               >
                 <option value="">All Fields</option>
-                {FIELDS_OF_STUDY.map((field) => (
-                  <option key={field} value={field}>{field}</option>
+                {fields.map((field) => (
+                  <option key={field.id} value={field.id}>{field.name}</option>
                 ))}
               </select>
             </div>
-            
+
             <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Semester
@@ -292,8 +307,8 @@ const Resources = () => {
               >
                 <option value="">All Subjects</option>
                 {availableSubjects.map((subject) => (
-                  <option key={subject} value={subject}>
-                    {subject}
+                  <option key={subject.id} value={subject.name}>
+                    {subject.name}
                   </option>
                 ))}
               </select>
@@ -391,10 +406,8 @@ const Resources = () => {
           </Pagination>
         )}
       </main>
-
       <Footer />
     </div>
   );
 };
-
 export default Resources;

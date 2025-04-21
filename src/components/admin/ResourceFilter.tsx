@@ -1,9 +1,12 @@
 
-import React from 'react';
-import { Search, Filter } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RESOURCE_TYPES, SUBJECTS, SEMESTERS, FIELDS_OF_STUDY } from "@/data/mockData";
+import { SEMESTERS } from "@/data/mockData";
+import { supabase } from "@/lib/supabase";
+
+const RESOURCE_TYPES = ["Notes", "Questions", "Syllabus"];
 
 interface ResourceFilterProps {
   onFilterChange: (filterType: string, value: string | number) => void;
@@ -18,12 +21,36 @@ interface ResourceFilterProps {
   };
 }
 
-const ResourceFilter = ({ 
-  onFilterChange, 
-  onSearchChange, 
+const ResourceFilter = ({
+  onFilterChange,
+  onSearchChange,
   onReset,
   filters
 }: ResourceFilterProps) => {
+  const [fields, setFields] = useState<{ id: string; name: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string; field_id: string; semester: number }[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    supabase.from("fields").select("*").order("name").then(({ data }) => {
+      setFields(data || []);
+    });
+    supabase.from("subjects").select("*").then(({ data }) => {
+      setSubjects(data || []);
+    });
+  }, []);
+
+  useEffect(() => {
+    let filtered = subjects;
+    if (filters.field) {
+      filtered = filtered.filter(s => s.field_id === filters.field);
+    }
+    if (filters.semester) {
+      filtered = filtered.filter(s => s.semester === filters.semester);
+    }
+    setAvailableSubjects(filtered.map(({ id, name }) => ({ id, name })));
+  }, [filters.field, filters.semester, subjects]);
+
   return (
     <div className="bg-white p-5 rounded-lg shadow-sm mb-6 border border-gray-100">
       <div className="flex flex-col space-y-4">
@@ -36,7 +63,6 @@ const ResourceFilter = ({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-        
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Field of Study</label>
@@ -46,12 +72,11 @@ const ResourceFilter = ({
               onChange={(e) => onFilterChange('field', e.target.value)}
             >
               <option value="">All Fields</option>
-              {FIELDS_OF_STUDY.map((field) => (
-                <option key={field} value={field}>{field}</option>
+              {fields.map((field) => (
+                <option key={field.id} value={field.id}>{field.name}</option>
               ))}
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Type</label>
             <select
@@ -65,7 +90,6 @@ const ResourceFilter = ({
               ))}
             </select>
           </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Subject</label>
             <select
@@ -74,12 +98,11 @@ const ResourceFilter = ({
               onChange={(e) => onFilterChange('subject', e.target.value)}
             >
               <option value="">All Subjects</option>
-              {SUBJECTS.map((subject) => (
-                <option key={subject} value={subject}>{subject}</option>
+              {availableSubjects.map((subject) => (
+                <option key={subject.id} value={subject.name}>{subject.name}</option>
               ))}
             </select>
           </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Semester</label>
             <select
@@ -93,10 +116,9 @@ const ResourceFilter = ({
               ))}
             </select>
           </div>
-          
           <div className="flex items-end">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={onReset}
               className="w-full"
             >
