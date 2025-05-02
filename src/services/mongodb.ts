@@ -1,3 +1,4 @@
+
 import { Resource } from '@/types/resource';
 import { supabase } from '@/lib/supabase';
 
@@ -42,7 +43,7 @@ export const getResources = async (): Promise<Resource[]> => {
     return data?.map(item => ({
       ...item,
       id: Number(item.id),
-      field: item.fields?.name || item.field || "BCA", // Use field name from the fields table or fallback to the field column
+      field: item.fields?.name || item.field || "BCA", // Use field name from the fields table or fallback
     })) || [];
   } catch (error) {
     console.error('Failed to fetch resources:', error);
@@ -67,7 +68,7 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
     return { 
       ...data, 
       id: Number(data.id),
-      field: data.fields?.name || data.field || "BCA", // Use field name from the fields table or fallback to the field column
+      field: data.fields?.name || data.field || "BCA", // Use field name from fields table
     } as Resource;
   } catch (error) {
     console.error(`Failed to fetch resource with id ${id}:`, error);
@@ -77,26 +78,10 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
 
 export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate'>): Promise<Resource> => {
   try {
-    // Fetch the field_id from the fields table
-    let field_id = null;
-    if (resource.field) {
-      const { data: fieldData } = await supabase
-        .from('fields')
-        .select('id')
-        .eq('name', resource.field)
-        .single();
-        
-      if (fieldData) {
-        field_id = fieldData.id;
-      }
-    }
-    
-    // Generate a unique ID and add upload date
     const newResource = {
       ...resource,
       id: Date.now().toString(),
-      uploadDate: new Date().toISOString().split('T')[0],
-      field_id: field_id
+      uploadDate: new Date().toISOString().split('T')[0]
     };
     
     const { data, error } = await supabase
@@ -115,7 +100,6 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
       ...data, 
       id: Number(data.id),
       uploadDate: data.uploadDate || newResource.uploadDate,
-      field: resource.field // Preserve the field name
     } as Resource;
   } catch (error) {
     console.error('Failed to create resource:', error);
@@ -125,31 +109,10 @@ export const createResource = async (resource: Omit<Resource, 'id' | 'uploadDate
 
 export const updateResource = async (id: number, updates: Partial<Resource>): Promise<Resource | null> => {
   try {
-    // Fetch the field_id from the fields table if field name is provided
-    let field_id = updates.field_id;
-    if (updates.field && !updates.field_id) {
-      const { data: fieldData } = await supabase
-        .from('fields')
-        .select('id')
-        .eq('name', updates.field)
-        .single();
-        
-      if (fieldData) {
-        field_id = fieldData.id;
-      }
-    }
-    
-    // Create an update object without the field property (we'll use field_id instead)
     const updateData = {
       ...updates,
-      id: id.toString(),
-      field_id: field_id,
+      id: id.toString()
     };
-    
-    // If field was in the updates, ensure it's stored in the field column too
-    if (updates.field) {
-      updateData.field = updates.field;
-    }
     
     const { data, error } = await supabase
       .from('resources')
@@ -167,7 +130,7 @@ export const updateResource = async (id: number, updates: Partial<Resource>): Pr
     return { 
       ...data, 
       id: Number(data.id),
-      field: updates.field || data.field || "BCA" // Preserve the field name
+      field: updates.field || data.field || "BCA"
     } as Resource;
   } catch (error) {
     console.error(`Failed to update resource with id ${id}:`, error);
@@ -198,8 +161,6 @@ export const deleteResource = async (id: number): Promise<boolean> => {
 // Authentication methods
 export const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
   try {
-    // In a real application, you would use Supabase Auth
-    // For now, we'll query the admins table directly
     const { data, error } = await supabase
       .from('admins')
       .select('*')
