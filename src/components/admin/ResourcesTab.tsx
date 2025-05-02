@@ -61,8 +61,15 @@ const ResourcesTab = ({ resources, isLoading }: ResourcesTabProps) => {
       result = result.filter(resource => resource.subject === filters.subject);
     }
     
-    if (filters.semester !== '' && filters.semester !== 'all') {
-      result = result.filter(resource => resource.semester === filters.semester);
+    if (filters.semester !== '') {
+      // Fix: Convert filters.semester to number for comparison when it's a string number
+      const semesterValue = typeof filters.semester === 'string' ? 
+        filters.semester === 'all' ? 'all' : parseInt(filters.semester) : 
+        filters.semester;
+        
+      if (semesterValue !== 'all' && typeof semesterValue === 'number') {
+        result = result.filter(resource => resource.semester === semesterValue);
+      }
     }
     
     if (filters.search) {
