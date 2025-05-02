@@ -8,6 +8,7 @@ import ResourceForm from '@/components/admin/ResourceForm';
 import ResourceFilter from '@/components/admin/ResourceFilter';
 import { Resource } from '@/types/resource';
 import { createResource, updateResource, deleteResource } from '@/services/mongodb';
+import { ALL_TYPES_VALUE } from '@/constants/resourceTypes';
 
 interface ResourcesTabProps {
   resources: Resource[];
@@ -48,19 +49,19 @@ const ResourcesTab = ({ resources, isLoading }: ResourcesTabProps) => {
   React.useEffect(() => {
     let result = [...resources];
     
-    if (filters.field) {
+    if (filters.field && filters.field !== 'all') {
       result = result.filter(resource => resource.field === filters.field);
     }
     
-    if (filters.type) {
+    if (filters.type && filters.type !== ALL_TYPES_VALUE) {
       result = result.filter(resource => resource.type === filters.type);
     }
     
-    if (filters.subject) {
+    if (filters.subject && filters.subject !== 'all') {
       result = result.filter(resource => resource.subject === filters.subject);
     }
     
-    if (filters.semester !== '') {
+    if (filters.semester !== '' && filters.semester !== 'all') {
       result = result.filter(resource => resource.semester === filters.semester);
     }
     

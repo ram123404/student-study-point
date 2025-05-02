@@ -36,7 +36,7 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({
           <SelectValue placeholder="Select field" />
         </SelectTrigger>
         <SelectContent>
-          {includeAllOption && <SelectItem value="">All Fields</SelectItem>}
+          {includeAllOption && <SelectItem value="all">All Fields</SelectItem>}
           {fields.map((field) => (
             <SelectItem key={field.id} value={field.id}>{field.name}</SelectItem>
           ))}

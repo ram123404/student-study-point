@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Resource } from '@/types/resource';
 import { useFields } from './useFields';
+import { ALL_TYPES_VALUE } from '@/constants/resourceTypes';
 
 interface FiltersState {
   semester: string | number;
@@ -17,11 +18,11 @@ interface UseResourceFilteringProps {
 
 export const useResourceFiltering = ({ allResources }: UseResourceFilteringProps) => {
   const [filters, setFilters] = useState<FiltersState>({
-    semester: "",
-    subject: "",
-    type: "",
+    semester: "all",
+    subject: "all",
+    type: ALL_TYPES_VALUE,
     searchQuery: "",
-    field: "",
+    field: "all",
   });
   const [filteredResources, setFilteredResources] = useState<Resource[]>(allResources);
   const { fields } = useFields();
@@ -30,7 +31,7 @@ export const useResourceFiltering = ({ allResources }: UseResourceFilteringProps
   useEffect(() => {
     let results = [...allResources];
 
-    if (filters.field) {
+    if (filters.field && filters.field !== 'all') {
       // Match against field name (not id)
       const fieldObj = fields.find(f => f.id === filters.field);
       if (fieldObj) {
@@ -40,19 +41,19 @@ export const useResourceFiltering = ({ allResources }: UseResourceFilteringProps
       }
     }
 
-    if (filters.semester) {
+    if (filters.semester && filters.semester !== 'all') {
       results = results.filter(
         (resource) => resource.semester === parseInt(filters.semester.toString())
       );
     }
 
-    if (filters.subject) {
+    if (filters.subject && filters.subject !== 'all') {
       results = results.filter(
         (resource) => resource.subject === filters.subject
       );
     }
 
-    if (filters.type) {
+    if (filters.type && filters.type !== ALL_TYPES_VALUE) {
       results = results.filter(
         (resource) => resource.type === filters.type
       );
@@ -79,11 +80,11 @@ export const useResourceFiltering = ({ allResources }: UseResourceFilteringProps
 
   const clearFilters = () => {
     setFilters({
-      semester: "",
-      subject: "",
-      type: "",
+      semester: "all",
+      subject: "all",
+      type: ALL_TYPES_VALUE,
       searchQuery: "",
-      field: "",
+      field: "all",
     });
   };
 

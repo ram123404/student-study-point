@@ -14,6 +14,7 @@ import ResourcesGrid from "@/components/resources/ResourcesGrid";
 import ResourcesPagination from "@/components/resources/ResourcesPagination";
 import { useResourceFiltering } from "@/hooks/useResourceFiltering";
 import { usePagination } from "@/hooks/usePagination";
+import { ALL_TYPES_VALUE } from "@/constants/resourceTypes";
 
 const Resources = () => {
   const { toast } = useToast();

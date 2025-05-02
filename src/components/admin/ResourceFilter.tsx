@@ -7,6 +7,7 @@ import SubjectSelector from '@/components/resources/SubjectSelector';
 import SemesterSelector from '@/components/resources/SemesterSelector';
 import ResourceTypeSelector from '@/components/resources/ResourceTypeSelector';
 import { useFields } from '@/hooks/useFields';
+import { ALL_TYPES_VALUE } from '@/constants/resourceTypes';
 
 interface ResourceFilterProps {
   onFilterChange: (filterType: string, value: string | number) => void;
@@ -42,7 +43,7 @@ const ResourceFilter = ({
         
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <FieldSelector 
-            value={filters.field || ''} 
+            value={filters.field || 'all'} 
             onChange={(value) => onFilterChange('field', value)} 
           />
           
@@ -54,12 +55,12 @@ const ResourceFilter = ({
           <SubjectSelector 
             value={filters.subject} 
             onChange={(value) => onFilterChange('subject', value)}
-            fieldId={filters.field}
+            fieldId={filters.field !== 'all' ? filters.field : undefined}
             semester={typeof filters.semester === 'number' ? filters.semester : undefined}
           />
           
           <SemesterSelector 
-            value={filters.semester} 
+            value={filters.semester || 'all'} 
             onChange={(value) => onFilterChange('semester', value)}
           />
           

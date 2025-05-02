@@ -30,10 +30,10 @@ const SubjectSelector: React.FC<SubjectSelectorProps> = ({
   
   // If current selected subject is not in available subjects, reset it
   useEffect(() => {
-    if (!isLoading && value && subjects.length > 0) {
+    if (!isLoading && value && value !== 'all' && subjects.length > 0) {
       const subjectExists = subjects.some(s => s.name === value);
       if (!subjectExists && onChange) {
-        onChange('');
+        onChange('all');
       }
     }
   }, [subjects, value, isLoading, onChange]);
@@ -50,7 +50,7 @@ const SubjectSelector: React.FC<SubjectSelectorProps> = ({
           <SelectValue placeholder="Select subject" />
         </SelectTrigger>
         <SelectContent>
-          {includeAllOption && <SelectItem value="">All Subjects</SelectItem>}
+          {includeAllOption && <SelectItem value="all">All Subjects</SelectItem>}
           {subjects.map((subject) => (
             <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
           ))}

@@ -30,7 +30,7 @@ const SemesterSelector: React.FC<SemesterSelectorProps> = ({
       <Select
         value={String(value)}
         onValueChange={(val) => {
-          const newValue = val === '' ? '' : parseInt(val);
+          const newValue = val === 'all' ? 'all' : parseInt(val);
           onChange(newValue);
         }}
       >
@@ -38,7 +38,7 @@ const SemesterSelector: React.FC<SemesterSelectorProps> = ({
           <SelectValue placeholder="Select semester" />
         </SelectTrigger>
         <SelectContent>
-          {includeAllOption && <SelectItem value="">All Semesters</SelectItem>}
+          {includeAllOption && <SelectItem value="all">All Semesters</SelectItem>}
           {semesters.map((semester) => (
             <SelectItem key={semester} value={String(semester)}>
               Semester {semester}

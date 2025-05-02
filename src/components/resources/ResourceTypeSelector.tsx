@@ -7,19 +7,20 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-
-const RESOURCE_TYPES = ["Notes", "Questions", "Syllabus"];
+import { RESOURCE_TYPES, ALL_TYPES_VALUE } from "@/constants/resourceTypes";
 
 interface ResourceTypeSelectorProps {
   value: string;
   onChange: (value: string) => void;
   label?: string;
+  includeAllOption?: boolean;
 }
 
 const ResourceTypeSelector: React.FC<ResourceTypeSelectorProps> = ({ 
   value, 
   onChange, 
-  label = "Type" 
+  label = "Type",
+  includeAllOption = true
 }) => {
   return (
     <div>
@@ -32,7 +33,7 @@ const ResourceTypeSelector: React.FC<ResourceTypeSelectorProps> = ({
           <SelectValue placeholder="Select type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Types</SelectItem>
+          {includeAllOption && <SelectItem value={ALL_TYPES_VALUE}>All Types</SelectItem>}
           {RESOURCE_TYPES.map((type) => (
             <SelectItem key={type} value={type}>{type}</SelectItem>
           ))}

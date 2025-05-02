@@ -7,6 +7,7 @@ import FieldSelector from './FieldSelector';
 import SubjectSelector from './SubjectSelector';
 import SemesterSelector from './SemesterSelector';
 import ResourceTypeSelector from './ResourceTypeSelector';
+import { ALL_TYPES_VALUE } from '@/constants/resourceTypes';
 
 interface FiltersState {
   semester: string | number;
@@ -68,7 +69,7 @@ const ResourcesFilters: React.FC<ResourcesFiltersProps> = ({
         <SubjectSelector
           value={filters.subject}
           onChange={(value) => onFilterChange('subject', value)}
-          fieldId={filters.field}
+          fieldId={filters.field !== 'all' ? filters.field : undefined}
           semester={typeof filters.semester === 'number' ? filters.semester : undefined}
         />
 

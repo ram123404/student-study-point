@@ -20,8 +20,6 @@ interface ResourceFormProps {
   submitLabel: string;
 }
 
-const RESOURCE_TYPES = ["Notes", "Questions", "Syllabus"];
-
 const ResourceForm = ({
   resource,
   onSubmit,
@@ -33,7 +31,7 @@ const ResourceForm = ({
   const [formValues, setFormValues] = useState({
     title: resource?.title || '',
     description: resource?.description || '',
-    type: resource?.type || RESOURCE_TYPES[0],
+    type: resource?.type || 'Notes',
     subject: resource?.subject || '',
     semester: resource?.semester || 1,
     fileUrl: resource?.fileUrl || '#',
@@ -137,6 +135,7 @@ const ResourceForm = ({
               <ResourceTypeSelector
                 value={formValues.type}
                 onChange={(value) => handleInputChange('type', value)}
+                label="Type"
                 includeAllOption={false}
               />
             </div>
